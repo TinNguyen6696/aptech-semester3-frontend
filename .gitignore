@@ -12,6 +12,11 @@ dist
 dist-ssr
 *.local
 
+# Environment variables (keep .env.example committed as a template)
+.env
+.env.*
+!.env.example
+
 # TanStack Router auto-generated route tree
 src/routeTree.gen.ts
 
