@@ -13,7 +13,7 @@ Frontend for the Talent Platform application, built with React 19 and TypeScript
 | Build Tool | [Vite 8](https://vite.dev/) |
 | Routing | [TanStack Router](https://tanstack.com/router) — file-based routing |
 | Server State | [TanStack Query](https://tanstack.com/query) — data fetching & caching |
-| Forms | [TanStack Form](https://tanstack.com/form) |
+| Forms | [TanStack Form](https://tanstack.com/form) + [Zod](https://zod.dev/) + `@tanstack/zod-form-adapter` |
 | Tables | [TanStack Table](https://tanstack.com/table) |
 | HTTP Client | [Axios](https://axios-http.com/) |
 | Styling | [Tailwind CSS v4](https://tailwindcss.com/) |
