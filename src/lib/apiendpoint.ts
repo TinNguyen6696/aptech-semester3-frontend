@@ -8,4 +8,7 @@ export const API = {
 
     REGISTER: `${URL_API_AUTH}/register`,
     
+    /* axios client */
+    AXIOS_REGISTER:`auth/register`,
+    AXIOS_LOGIN:`auth/login`,
 }

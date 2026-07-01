@@ -48,9 +48,10 @@ export default function RegisterForm({provinces,options}){
             }
             console.log("check req: ", req)
             try {
-                const res = await axiosClient.post('auth/register', req);
+                const res = await axiosClient.post(API.AXIOS_REGISTER, req);
                 if(res.data.isSuccess){
                     const token = res.data.data.accessToken;
+                    console.log("check token: ", res.data)
                     localStorage.setItem('accessToken', token);
                     navigate({ to: '/' });
                 }else{
@@ -63,7 +64,7 @@ export default function RegisterForm({provinces,options}){
                     const serverData = error.response.data; 
                     toast.error(serverData.message || "Có lỗi xảy ra");
                 } else {
-                    console.log("Lỗi không có response (lỗi mạng hoặc server sập):", error);
+                    console.log("Lỗi không có response:", error);
                 }                       
             } finally {
                 setSubmitting(false);

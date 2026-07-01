@@ -1,0 +1,36 @@
+
+  .nav-login:hover { color: #14161f; }
+  .nav-join {
+    background: #3b6df0; color: #fff; font-size: 14px; font-weight: 600;
+    padding: 9px 18px; border-radius: 8px; text-decoration: none; border: none; cursor: pointer;
+  }
+  .nav-join:hover { background: #2f5adf; }
+
+  .hero { max-width: 1120px; margin: 0 auto; padding: 40px 24px 0; }
+  .hero-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+  .hero-title { font-size: 22px; font-weight: 700; color: #14161f; margin: 0; }
+  .hero-link { font-size: 14px; color: #3b6df0; font-weight: 600; text-decoration: none; }
+  .hero-link:hover { text-decoration: underline; }
+
+  .card-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; padding-bottom: 40px; }
+  .card {
+    background: #fff; border: 1px solid #eceef4; border-radius: 12px; padding: 20px; min-height: 90px;
+    display: flex; align-items: flex-start;
+  }
+  .card-icon {
+    width: 34px; height: 34px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center; font-size: 15px;
+  }
+  .card-icon.purple { background: #f1eafe; color: #8b5cf6; }
+  .card-icon.orange { background: #fdeee3; color: #f97316; }
+  .card-icon.green  { background: #e5f9ee; color: #22c58b; }
+
+  .mobile-menu-btn { display: none; background: none; border: none; cursor: pointer; padding: 4px; }
+
+  @media (max-width: 768px) {
+    .nav-links { display: none; }
+    .nav-login { display: none; }
+    .mobile-menu-btn { display: block; }
+    .card-grid { grid-template-columns: 1fr; }
+    .hero-top { align-items: flex-start; }
+  }
