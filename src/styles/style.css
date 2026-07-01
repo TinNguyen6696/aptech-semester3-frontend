@@ -1,0 +1,33 @@
+/* login */
+.main-login{
+    height: 100vh;
+}
+.main-login .right-content{
+    height: 100vh;
+}
+.main-login .form-container{
+    height: 100%;
+    width: 100%;
+}
+.main-login  .tab-pane-custom{
+    border:1px #E5E7EB solid;
+    padding:3px;
+    border-radius: 5px;
+    width: 100%;
+    height: 50px;
+    justify-content: space-around;
+    margin-bottom: 25px;
+}
+.main-login .tab-pane-custom button{
+    border-radius: 7px;
+    width: 49%;
+    cursor: pointer;
+}
+.right-content-cover {
+    width: 100%;
+    max-width: 400px;
+    display: flex;
+    flex-direction: column;
+    height: 87vh;
+}
+

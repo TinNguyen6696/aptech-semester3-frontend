@@ -1,8 +1,14 @@
-import { createFileRoute } from "@tanstack/react-router"
+import { createFileRoute, redirect } from "@tanstack/react-router"
 
 import { Button } from "@/components/ui/button"
 
 export const Route = createFileRoute("/")({
+  // beforeLoad: () => {
+  //   const isLogged = false;
+  //   if (!isLogged) {
+  //     throw redirect({ to: "/login" });
+  //   }
+  // },
   component: HomePage,
 })
 
