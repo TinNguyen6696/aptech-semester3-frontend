@@ -11,14 +11,16 @@ import { useUserStore } from "@/Store/userStore";
 
 export default function Profile(){
     const navigate = useNavigate();
+    const [localPreview, setLocalPreview] = useState<string | null>(null);
     const { userInfo, updateUserInfo } = useUserStore();
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [isEditing, setIsEditing] = useState(false);
     const [provinces, setProvinces] = useState([])
     const [options, setOptions] = useState([])
-    const previewUrl = userInfo?.profileImageUrl 
+    const derivedPreviewUrl = userInfo?.profileImageUrl 
         ? `${API.URL}/${userInfo.profileImageUrl}` 
-        : null; 
+        : null;
+    const previewUrl = localPreview || derivedPreviewUrl;
     useEffect(() => {
       const fetchProvinces = async () => {
         try {
@@ -150,7 +152,7 @@ export default function Profile(){
 
         if (file) {
             const objectUrl = URL.createObjectURL(file);
-            setPreviewUrl(objectUrl);
+            setLocalPreview(objectUrl);
             const formData = new FormData();
 
             formData.append("file", file);  
@@ -163,11 +165,13 @@ export default function Profile(){
                 if(response.data.isSuccess){
                     toast.success(response.data.message);
                     updateUserInfo({ profileImageUrl: response.data.data.profileImageUrl})
+                    setLocalPreview(null);
                 }
 
             } catch (error) {
                 console.error("Upload error:", error);
                 toast.error('Failed to upload image!');
+                setLocalPreview(null); 
             }
             
         }
