@@ -5,7 +5,7 @@ import { API } from '@/lib/apiendpoint';
 import axiosClient from '@/services/axiosClient';
 import { useNavigate } from "@tanstack/react-router";
 import { toast } from 'react-toastify';
-
+import { StringValue } from '@/lib/stringValue';
 
 export default function LoginForm(){
     const navigate = useNavigate();
@@ -30,8 +30,8 @@ export default function LoginForm(){
                 const res = await axiosClient.post(API.AXIOS_LOGIN, req);
                 if(res.data.isSuccess){
                     const token = res.data.data.accessToken;
-                    console.log("check token: ", res.data)
-                    localStorage.setItem('accessToken', token);
+                    localStorage.setItem(StringValue.ACCESS_TOKEN, token);
+                    localStorage.setItem(StringValue.USER_INFO, JSON.stringify(res.data.data.user));
                     navigate({ to: '/' });
                 }else{
                     console.log("check lỗi: ", res.data.message);

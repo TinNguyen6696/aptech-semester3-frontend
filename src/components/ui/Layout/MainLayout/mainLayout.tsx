@@ -1,3 +1,4 @@
+import FooterLayout from '../Footer/footerLayout';
 import HeaderLayout from '../Header/headerLayout';
 
 interface MainLayoutProps {
@@ -8,10 +9,10 @@ export default function MainLayout({ children }: MainLayoutProps) {
   return (
     <div className="flex flex-col min-h-screen">
       <HeaderLayout />     
-      <main className="flex-grow w-full max-w-[1400px] mx-auto px-4 sm:px-6 py-6">
+      <main className="flex-grow w-full">
         {children}
       </main>
-
+      <FooterLayout />  
     </div>
   );
 }
