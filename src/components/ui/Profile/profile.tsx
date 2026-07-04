@@ -7,29 +7,25 @@ import * as Yup from 'yup';
 import axiosClient from "@/services/axiosClient";
 import { useNavigate } from "@tanstack/react-router";
 import { toast } from 'react-toastify';
+import { useUserStore } from "@/Store/userStore";
 
 export default function Profile(){
     const navigate = useNavigate();
+    const { userInfo, updateUserInfo } = useUserStore();
     const fileInputRef = useRef<HTMLInputElement>(null);
-    const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const [isEditing, setIsEditing] = useState(false);
     const [provinces, setProvinces] = useState([])
     const [options, setOptions] = useState([])
-    const [userInfo, setUserInfo] = useState(() => {
-        const savedUser = localStorage.getItem(StringValue.USER_INFO);
-            try {
-                return savedUser ? JSON.parse(savedUser) : null;
-            } catch (error) {
-                return null;
-            }
-    });    
+    const previewUrl = userInfo?.profileImageUrl 
+        ? `${API.URL}/${userInfo.profileImageUrl}` 
+        : null; 
     useEffect(() => {
       const fetchProvinces = async () => {
         try {
           const response = await axios.get(API.PROVINCE_GET_ALL)
           setProvinces(response.data.data)
         } catch (error) {
-          console.error("Lỗi khi lấy danh sách tỉnh:", error)
+          console.error("Failed to fetch provinces:", error)
         }
       }
 
@@ -41,7 +37,7 @@ export default function Profile(){
             const response = await axios.get(API.OPTION_GET_ALL)
             setOptions(response.data.data)
             } catch (error) {
-            console.error("Lỗi khi lấy danh sách options:", error)
+            console.error("Failed to fetch options:", error)
             }
         }
 
@@ -54,22 +50,22 @@ export default function Profile(){
         email: string;
         phoneNumber: string;
         bio: string;
-        province: string;
+        provinceName: string;
+        provinceId:number;
         category:string;
         skillLevel:string;
         role:string;
     }
     const validationSchema = Yup.object({
-        firstName: Yup.string().required('Bắt buộc nhập'),
-        lastName: Yup.string().required('Bắt buộc nhập'),
-        username: Yup.string().required('Bắt buộc nhập'),
-        email: Yup.string().email('Email không hợp lệ').required('Bắt buộc nhập'),
-        bio: Yup.string().max(300, 'Tối đa 300 ký tự'),
+        firstName: Yup.string().required('This field is required'),
+        lastName: Yup.string().required('This field is required'),
+        username: Yup.string().required('This field is required'),
+        email: Yup.string().email('Invalid email address').required('This field is required'),
+        bio: Yup.string().max(300, 'Maximum 300 characters'),
         phoneNumber: Yup.string()
-                .matches(/^[0-9]*$/, 'Số điện thoại chỉ được chứa ký tự số')
+                .matches(/^[0-9]*$/, 'Phone number must contain digits only')
                 .nullable()
-                .notRequired(),
-        province: Yup.string(),
+                .notRequired()
     });
     const formik = useFormik<ProfileFormValues>({
         initialValues: {
@@ -79,14 +75,14 @@ export default function Profile(){
         email: userInfo?.email || "",
         phoneNumber: userInfo?.phoneNumber || "",
         bio: userInfo?.bio || "",
-        province: userInfo.provinceId || 0,
-        category:userInfo.primaryCategory || "",
-        skillLevel:userInfo.skillLevel,
-        role:userInfo.role || ''
+        provinceId: userInfo?.provinceId || 0,
+        provinceName: userInfo?.provinceName || "",
+        category:userInfo?.primaryCategory || "",
+        skillLevel:userInfo?.skillLevel || "",
+        role:userInfo?.role || ''
         },
         validationSchema: validationSchema,
         onSubmit: async (values, { setSubmitting, resetForm, setErrors }) => {
-            console.log("check value: ", values)
             const req = {
                 Username:values.username,
                 FirstName:values.firstName,
@@ -96,17 +92,16 @@ export default function Profile(){
                 Role:values.role,
                 PrimaryCategory:values.category,
                 SkillLevel:values.skillLevel,
-                ProvinceId:values.province,
+                ProvinceId:values.provinceId,
                 PhoneNumber:values.phoneNumber
             }
-            console.log("check: ", req)
+            console.log("check email: ", req)
             try {
                 const res = await axiosClient.put(API.AXIOS_UPDATE_PROFILE, req);
                 if(res.data.isSuccess){
                     toast.success(res.data.message);
                     const updatedUser = res.data.data;
-                    setUserInfo(updatedUser);
-                    localStorage.setItem(StringValue.USER_INFO, JSON.stringify(updatedUser));
+                    updateUserInfo(updatedUser); 
                     setIsEditing(false);
                 }else{
                     toast.error(res.data.message);
@@ -114,9 +109,9 @@ export default function Profile(){
             } catch (error) {
                 if (error.response) {
                     const serverData = error.response.data; 
-                    toast.error(serverData.message || "Có lỗi xảy ra");
+                    toast.error(serverData.message || "Something went wrong");
                 } else {
-                    console.log("Lỗi không có response:", error);
+                    console.log("No response received:", error);
                 }                       
             } finally {
                 setSubmitting(false);
@@ -129,15 +124,30 @@ export default function Profile(){
         setIsEditing(false);
     };
 
-    const getInitial = () => {
-        const name = formik.values.firstName || formik.values.email || "";
-        return name.charAt(0).toUpperCase();
-    };
     const onTriggerUpload = ()=>{
         fileInputRef.current?.click();
     }
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
+        const files = e.target.files;
+        if (!files || files.length === 0) {
+            return;
+        }
+
+        const file = files[0];
+        const MAX_SIZE_MB = 2;
+        const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
+        if (file.size > MAX_SIZE_BYTES) {
+            toast.error(`Image is too large! Please choose a file smaller than ${MAX_SIZE_MB}MB.`);
+            return;
+        }
+
+        const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+        if (!allowedTypes.includes(file.type)) {
+            toast.error('Unsupported format. Please choose JPG, PNG, or WEBP.');
+            return;
+        }
+
+
         if (file) {
             const objectUrl = URL.createObjectURL(file);
             setPreviewUrl(objectUrl);
@@ -145,26 +155,19 @@ export default function Profile(){
 
             formData.append("file", file);  
             try {
-                const response = await axiosClient.post(API.AXIOS_UPLOAD_IMAGE, formData, {
+                const response = await axiosClient.put(API.AXIOS_UPLOAD_PROFILE_AVATAR, formData, {
                     headers: {
                         "Content-Type": "multipart/form-data",
                     },
                 });
                 if(response.data.isSuccess){
-                    const imagePath = response.data.data; 
-                    const reqUploadUrl = {
-                        ProfileImageUrl:imagePath
-                    }
-                    const resUploadUrl = await axiosClient.put(API.AXIOS_UPLOAD_PROFILE_AVATAR, reqUploadUrl);
-                    if(response.data.isSuccess){
-                        toast.success(resUploadUrl.data.message);
-                    }
-
+                    toast.success(response.data.message);
+                    updateUserInfo({ profileImageUrl: response.data.data.profileImageUrl})
                 }
 
             } catch (error) {
-                console.error("Lỗi upload:", error);
-                toast.error("Không thể upload ảnh!");
+                console.error("Upload error:", error);
+                toast.error('Failed to upload image!');
             }
             
         }
@@ -177,7 +180,7 @@ export default function Profile(){
 
                 <div className="mb-4">
                     <div className="flex gap-3">
-                        <h1 className="text-2xl font-extrabold text-gray-900">{`${userInfo.lastName} ${userInfo.firstName}`}</h1>
+                        <h1 className="text-2xl font-extrabold text-gray-900">{`${userInfo?.lastName} ${userInfo?.firstName}`}</h1>
                         <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">
                             {userInfo?.primaryCategory || 'Coder'}
                         </span>
@@ -207,6 +210,10 @@ export default function Profile(){
                             src={previewUrl} 
                             alt="Preview" 
                             className="w-20 h-20 rounded-full object-cover border border-gray-200"
+                            onError={(e) => {
+                                e.currentTarget.src = StringValue.USER_AVATAR_DEFAULT;
+                                e.currentTarget.onerror = null;
+                            }}
                             />
                         ) : (
                             <span className="w-20 h-20 rounded-full bg-blue-600 text-white flex items-center justify-center text-2xl font-bold">
@@ -303,7 +310,7 @@ export default function Profile(){
                                 className="w-full px-3.5 py-2.5 text-sm text-gray-800 border border-gray-200 rounded-lg transition-shadow"
                             />
                             {formik.touched.firstName && formik.errors.firstName && (
-                                <p className="text-red-500 text-xs">{formik.errors.lastName}</p>
+                                <p className="text-red-500 text-xs">{formik.errors.firstName}</p>
                             )}
                         </div>
                         </div>
@@ -375,10 +382,10 @@ export default function Profile(){
                             <div className="input-group w-1/2">
                                 <label className="block text-xs font-semibold text-gray-500 mb-1.5">Province</label>                       
                                 <select  
-                                    name='province'
+                                    name='provinceId'
                                     onChange={formik.handleChange}
                                     onBlur={formik.handleBlur}
-                                    value={formik.values.province}
+                                    value={formik.values.provinceId}
                                     className="w-full px-3.5 py-2.5 text-sm text-gray-800 border border-gray-200 rounded-lg transition-shadow bg-white">
                                     {(provinces || []).map((p,index) => (
                                         <option key={index} value={p.id}>{p.name}</option>

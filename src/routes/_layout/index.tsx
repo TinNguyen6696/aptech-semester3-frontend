@@ -1,6 +1,7 @@
 import { createFileRoute, redirect } from "@tanstack/react-router"
 
 import { Button } from "@/components/ui/button"
+import { PageTitle } from "@/components/PageTitle/pagetitle"
 
 export const Route = createFileRoute("/_layout/")({
   component: HomePage,
@@ -9,6 +10,7 @@ export const Route = createFileRoute("/_layout/")({
 function HomePage() {
   return (
     <>
+      <PageTitle title={"Home"} />
       <section className="px-6 sm:px-10 lg:px-16 pt-16 pb-20">
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
 

@@ -1,20 +1,19 @@
 import { useState, useRef, useEffect } from 'react';
 import './headerLayout.css';
 import { StringValue } from '@/lib/stringValue';
+import { API } from '@/lib/apiendpoint';
+import { useUserStore } from '@/Store/userStore';
  
 export default function HeaderLayout(){
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const dropdownRef = useRef(null);
+    
+    const { userInfo, updateUserInfo, clearUserInfo } = useUserStore();
+    const previewUrl = userInfo?.profileImageUrl 
+        ? `${API.URL}/${userInfo.profileImageUrl}` 
+        : null;
 
-    const [userInfo, setUserInfo] = useState(() => {
-        const savedUser = localStorage.getItem(StringValue.USER_INFO);
-        try {
-            return savedUser ? JSON.parse(savedUser) : null;
-        } catch (error) {
-            return null;
-        }
-    });
     useEffect(() => {
         function handleClickOutside(event) {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -26,9 +25,8 @@ export default function HeaderLayout(){
     }, []);
 
     const handleLogout = () => {
-        localStorage.removeItem(StringValue.USER_INFO);
+        clearUserInfo();  
         localStorage.removeItem(StringValue.ACCESS_TOKEN);
-        setUserInfo(null);
         setIsDropdownOpen(false);
         window.location.href = '/login';
     };
@@ -66,11 +64,15 @@ export default function HeaderLayout(){
                                     onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                                     className="flex items-center gap-2 focus:outline-none cursor-pointer"
                                 >
-                                    {userInfo.avatar ? (
+                                    {previewUrl ? (
                                         <img
-                                            src={userInfo.avatar}
+                                            src={previewUrl}
                                             alt="avatar"
                                             className="w-8 h-8 rounded-full object-cover border border-gray-200"
+                                            onError={(e) => {
+                                                e.currentTarget.src = StringValue.USER_AVATAR_DEFAULT;
+                                                e.currentTarget.onerror = null;
+                                            }}
                                         />
                                     ) : (
                                         <span className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-semibold">
@@ -136,11 +138,15 @@ export default function HeaderLayout(){
                         <div className="mt-4 pt-4 border-t border-gray-100">
                             {userInfo ? (
                                 <div className="flex items-center gap-3">
-                                    {userInfo.avatar ? (
+                                    {previewUrl ? (
                                         <img
-                                            src={userInfo.avatar}
+                                            src={previewUrl}
                                             alt="avatar"
                                             className="w-9 h-9 rounded-full object-cover border border-gray-200"
+                                            onError={(e) => {
+                                                e.currentTarget.src = StringValue.USER_AVATAR_DEFAULT;
+                                                e.currentTarget.onerror = null;
+                                            }}
                                         />
                                     ) : (
                                         <span className="w-9 h-9 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-semibold">

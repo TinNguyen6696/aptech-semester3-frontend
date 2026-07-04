@@ -1,5 +1,7 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import Profile from '@/components/ui/Profile/profile'
+import Achievements from '@/components/ui/Achievements/achievements'
+import { PageTitle } from '@/components/PageTitle/pagetitle'
 
 export const Route = createFileRoute('/_layout/profile')({
   beforeLoad: ({ context }) => {
@@ -18,7 +20,9 @@ export const Route = createFileRoute('/_layout/profile')({
 function RouteComponent() {
   return(
     <>
+        <PageTitle title={"Profile"} />
         <Profile />
+        <Achievements />
     </>
   )
 }

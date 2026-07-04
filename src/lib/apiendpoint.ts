@@ -3,6 +3,7 @@ const URL_API = `${URL}/api`;
 const URL_API_AUTH = `${URL_API}/auth`;
 
 export const API = {
+    URL:URL,
     URL_API: URL_API,
     PROVINCE_GET_ALL :`${URL_API}/provinces`,
     OPTION_GET_ALL:`${URL_API}/options`,
