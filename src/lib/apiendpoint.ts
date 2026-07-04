@@ -1,4 +1,5 @@
-const URL_API = 'http://localhost:5208/api';
+const URL = `http://localhost:5208`;
+const URL_API = `${URL}/api`;
 const URL_API_AUTH = `${URL_API}/auth`;
 
 export const API = {
@@ -11,4 +12,7 @@ export const API = {
     /* axios client */
     AXIOS_REGISTER:`auth/register`,
     AXIOS_LOGIN:`auth/login`,
+    AXIOS_UPDATE_PROFILE:`/users/me`,
+    AXIOS_UPLOAD_IMAGE:`uploads/image`,
+    AXIOS_UPLOAD_PROFILE_AVATAR:`/users/me/avatar`,
 }

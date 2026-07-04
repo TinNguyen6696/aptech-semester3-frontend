@@ -23,7 +23,6 @@ export default function Profile(){
                 return null;
             }
     });    
-
     useEffect(() => {
       const fetchProvinces = async () => {
         try {
@@ -48,86 +47,126 @@ export default function Profile(){
 
         fetchOptions()
     }, []) 
-
-    const [formData, setFormData] = useState({
-        firstName: userInfo?.firstName || "",
-        lastName: userInfo?.lastName || "",
-        username: userInfo?.username || "",
-        bio: userInfo?.bio || "",
-        major: userInfo?.major || "",
-        email: userInfo?.email || "",
-        phone: userInfo?.phone || "",
-        website: userInfo?.website || "",
-    });
+    interface ProfileFormValues {
+        firstName: string;
+        lastName: string;
+        username: string;
+        email: string;
+        phoneNumber: string;
+        bio: string;
+        province: string;
+        category:string;
+        skillLevel:string;
+        role:string;
+    }
     const validationSchema = Yup.object({
         firstName: Yup.string().required('Bắt buộc nhập'),
         lastName: Yup.string().required('Bắt buộc nhập'),
-        userName: Yup.string().required('Bắt buộc nhập'),
+        username: Yup.string().required('Bắt buộc nhập'),
         email: Yup.string().email('Email không hợp lệ').required('Bắt buộc nhập'),
+        bio: Yup.string().max(300, 'Tối đa 300 ký tự'),
+        phoneNumber: Yup.string()
+                .matches(/^[0-9]*$/, 'Số điện thoại chỉ được chứa ký tự số')
+                .nullable()
+                .notRequired(),
+        province: Yup.string(),
     });
-    const formik = useFormik({
+    const formik = useFormik<ProfileFormValues>({
         initialValues: {
-        firstName: '',
-        lastName: '',
-        userName: '',
-        email: '',
-        province: '',
+        firstName: userInfo?.firstName || "",
+        lastName: userInfo?.lastName || "",
+        username: userInfo?.username || "",
+        email: userInfo?.email || "",
+        phoneNumber: userInfo?.phoneNumber || "",
+        bio: userInfo?.bio || "",
+        province: userInfo.provinceId || 0,
+        category:userInfo.primaryCategory || "",
+        skillLevel:userInfo.skillLevel,
+        role:userInfo.role || ''
         },
         validationSchema: validationSchema,
         onSubmit: async (values, { setSubmitting, resetForm, setErrors }) => {
-            
-            
+            console.log("check value: ", values)
+            const req = {
+                Username:values.username,
+                FirstName:values.firstName,
+                Bio:values.bio,
+                Email:values.email,
+                LastName:values.lastName,
+                Role:values.role,
+                PrimaryCategory:values.category,
+                SkillLevel:values.skillLevel,
+                ProvinceId:values.province,
+                PhoneNumber:values.phoneNumber
+            }
+            console.log("check: ", req)
+            try {
+                const res = await axiosClient.put(API.AXIOS_UPDATE_PROFILE, req);
+                if(res.data.isSuccess){
+                    toast.success(res.data.message);
+                    const updatedUser = res.data.data;
+                    setUserInfo(updatedUser);
+                    localStorage.setItem(StringValue.USER_INFO, JSON.stringify(updatedUser));
+                    setIsEditing(false);
+                }else{
+                    toast.error(res.data.message);
+                }                          
+            } catch (error) {
+                if (error.response) {
+                    const serverData = error.response.data; 
+                    toast.error(serverData.message || "Có lỗi xảy ra");
+                } else {
+                    console.log("Lỗi không có response:", error);
+                }                       
+            } finally {
+                setSubmitting(false);
+            }
         },
     });
 
-
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        if (name === 'phone') {
-            const onlyNumbers = value.replace(/[^0-9]/g, '');
-            if (onlyNumbers.length <= 10) {
-            setFormData(prev => ({ ...prev, [name]: onlyNumbers }));
-            }
-        } else {
-            setFormData(prev => ({ ...prev, [name]: value }));
-        }
-    };
-
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        const updatedUser = { ...userInfo, ...formData };
-        localStorage.setItem(StringValue.USER_INFO, JSON.stringify(updatedUser));
-        setUserInfo(updatedUser);
-        setIsEditing(false);
-    };
-
     const handleCancel = () => {
-        setFormData({
-            firstName: userInfo?.firstName || "",
-            lastName: userInfo?.lastName || "",
-            username: userInfo?.username || "",
-            bio: userInfo?.bio || "",
-            major: userInfo?.major || "Singer",
-            email: userInfo?.email || "",
-            phone: userInfo?.phone || "",
-            website: userInfo?.website || "",
-        });
+        formik.resetForm();
         setIsEditing(false);
     };
 
     const getInitial = () => {
-        const name = formData.firstName || formData.email || "";
+        const name = formik.values.firstName || formik.values.email || "";
         return name.charAt(0).toUpperCase();
     };
     const onTriggerUpload = ()=>{
         fileInputRef.current?.click();
     }
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
-            console.log("File đã chọn:", file);
             const objectUrl = URL.createObjectURL(file);
             setPreviewUrl(objectUrl);
+            const formData = new FormData();
+
+            formData.append("file", file);  
+            try {
+                const response = await axiosClient.post(API.AXIOS_UPLOAD_IMAGE, formData, {
+                    headers: {
+                        "Content-Type": "multipart/form-data",
+                    },
+                });
+                if(response.data.isSuccess){
+                    const imagePath = response.data.data; 
+                    const reqUploadUrl = {
+                        ProfileImageUrl:imagePath
+                    }
+                    const resUploadUrl = await axiosClient.put(API.AXIOS_UPLOAD_PROFILE_AVATAR, reqUploadUrl);
+                    if(response.data.isSuccess){
+                        toast.success(resUploadUrl.data.message);
+                    }
+
+                }
+
+            } catch (error) {
+                console.error("Lỗi upload:", error);
+                toast.error("Không thể upload ảnh!");
+            }
+            
         }
 
         
@@ -137,7 +176,16 @@ export default function Profile(){
         <div className="max-w-3xl mx-auto px-6 sm:px-10 py-10">
 
                 <div className="mb-4">
-                    <h1 className="text-2xl font-extrabold text-gray-900">Your Profile</h1>
+                    <div className="flex gap-3">
+                        <h1 className="text-2xl font-extrabold text-gray-900">{`${userInfo.lastName} ${userInfo.firstName}`}</h1>
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">
+                            {userInfo?.primaryCategory || 'Coder'}
+                        </span>
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700">
+                            {userInfo?.skillLevel || 'Intermediate'}
+                        </span>
+                    </div>
+                    
                     <p className="text-sm text-gray-500 mt-1">Update your information to make it easier for the community to find and recognize you.</p>
                     {!isEditing && (
                         <button
@@ -187,8 +235,8 @@ export default function Profile(){
                 <div className="space-y-6 mt-5">
                     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
                         <h2 className="text-sm font-bold text-gray-900 mb-4">About</h2>
-                        <p className="text-sm text-gray-600 leading-relaxed">
-                            {formData.bio || <span className="text-gray-300">No bio yet.</span>}
+                        <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-wrap break-words max-h-40 overflow-y-auto">
+                            {userInfo?.bio || <span className="text-gray-300">No bio yet.</span>}
                         </p>
                     </div>
 
@@ -197,15 +245,27 @@ export default function Profile(){
                         <dl className="space-y-3.5">
                             <div className="flex items-center justify-between">
                                 <dt className="text-xs font-semibold text-gray-400">Email</dt>
-                                <dd className="text-sm text-gray-800">{formData.email || "—"}</dd>
+                                <dd className="text-sm text-gray-800">{userInfo?.email || "—"}</dd>
                             </div>
                             <div className="flex items-center justify-between">
                                 <dt className="text-xs font-semibold text-gray-400">Phone</dt>
-                                <dd className="text-sm text-gray-800">{formData.phone || "—"}</dd>
+                                <dd className="text-sm text-gray-800">{userInfo?.phoneNumber || "—"}</dd>
                             </div>
                             <div className="flex items-center justify-between">
-                                <dt className="text-xs font-semibold text-gray-400">Website</dt>
-                                <dd className="text-sm text-gray-800 truncate max-w-[220px]">{formData.website || "—"}</dd>
+                                <dt className="text-xs font-semibold text-gray-400">Province</dt>
+                                <dd className="text-sm text-gray-800">{userInfo?.provinceName || "—"}</dd>
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <dt className="text-xs font-semibold text-gray-400">Skill Level</dt>
+                                <dd className="text-sm text-gray-800">{userInfo?.skillLevel || "—"}</dd>
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <dt className="text-xs font-semibold text-gray-400">Major</dt>
+                                <dd className="text-sm text-gray-800">{userInfo?.primaryCategory || "—"}</dd>
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <dt className="text-xs font-semibold text-gray-400">Role</dt>
+                                <dd className="text-sm text-gray-800">{userInfo?.role || "—"}</dd>
                             </div>
                         </dl>
                     </div>
@@ -213,7 +273,7 @@ export default function Profile(){
                 </div>
             ) : (
                 /* ================= EDIT MODE ================= */            
-                <form className="space-y-6 mt-5">                
+                <form className="space-y-6 mt-5" onSubmit={formik.handleSubmit}>                
                     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
                         <h2 className="text-sm font-bold text-gray-900 mb-5">Personal Infomation</h2>
 
@@ -222,20 +282,29 @@ export default function Profile(){
                             <label className="block text-xs font-semibold text-gray-500 mb-1.5">First</label>
                             <input 
                                 type="text" 
-                                value={formData.firstName}
-                                onChange={handleChange} 
+                                value={formik.values.firstName}
+                                onChange={formik.handleChange} 
+                                onBlur={formik.handleBlur} 
                                 name="firstName"
                                 className="w-full px-3.5 py-2.5 text-sm text-gray-800 border border-gray-200 rounded-lg transition-shadow"
                             />
+                            {formik.touched.firstName && formik.errors.firstName && (
+                                <p className="text-red-500 text-xs">{formik.errors.firstName}</p>
+                            )}
                         </div>
                         <div>
                             <label className="block text-xs font-semibold text-gray-500 mb-1.5">Last</label>
                             <input 
                                 type="text" 
-                                value={formData.lastName}
-                                onChange={handleChange} 
+                                value={formik.values.lastName}
+                                onChange={formik.handleChange} 
+                                onBlur={formik.handleBlur} 
                                 name="lastName"
-                                className="w-full px-3.5 py-2.5 text-sm text-gray-800 border border-gray-200 rounded-lg transition-shadow"/>
+                                className="w-full px-3.5 py-2.5 text-sm text-gray-800 border border-gray-200 rounded-lg transition-shadow"
+                            />
+                            {formik.touched.firstName && formik.errors.firstName && (
+                                <p className="text-red-500 text-xs">{formik.errors.lastName}</p>
+                            )}
                         </div>
                         </div>
 
@@ -243,11 +312,15 @@ export default function Profile(){
                             <label className="block text-xs font-semibold text-gray-500 mb-1.5">Display name</label>
                             <input 
                                 type="text" 
-                                value={formData.username}
-                                onChange={handleChange} 
+                                value={formik.values.username}
+                                onChange={formik.handleChange} 
+                                onBlur={formik.handleBlur} 
                                 name="username"
                                 className="w-full px-3.5 py-2.5 text-sm text-gray-800 border border-gray-200 rounded-lg transition-shadow"
                                 />
+                            {formik.touched.username && formik.errors.username && (
+                                <p className="text-red-500 text-xs">{formik.errors.username}</p>
+                            )}
                         </div>
 
                         <div className="mt-5">
@@ -255,26 +328,76 @@ export default function Profile(){
                             <textarea 
                                 rows={3} 
                                 name="bio"
-                                value={formData.bio}
-                                onChange={handleChange}
+                                value={formik.values.bio}
+                                onChange={formik.handleChange}
+                                onBlur={formik.handleBlur} 
                                 maxLength={300}
                                 className="w-full px-3.5 py-2.5 text-sm text-gray-800 border border-gray-200 rounded-lg transition-shadow resize-none" 
                                 placeholder="Your sort description"></textarea>
-                            <p className="text-xs text-gray-400 mt-1.5 text-right">{formData.bio.length}/300</p>
+                            <div>
+                                {formik.touched.bio && formik.errors.bio && (
+                                    <p className="text-red-500 text-xs">{formik.errors.bio}</p>
+                                )}
+                                <p className="text-xs text-gray-400 mt-1.5 text-right">{formik.values.bio.length}/300</p>
+                            </div>    
                         </div>
 
-                        <div className="mt-5">
-                        <label className="block text-xs font-semibold text-gray-500 mb-1.5">Major</label>                       
-                        <select  
-                            name='province'
-                            onChange={formik.handleChange}
-                            onBlur={formik.handleBlur}
-                            value={formik.values.province}
-                            className="w-full px-3.5 py-2.5 text-sm text-gray-800 border border-gray-200 rounded-lg transition-shadow bg-white">
-                            {options.talentCategories.map((p) => (
-                                <option key={p.id} value={p.id}>{p.name}</option>
-                                ))}
-                        </select>
+                        <div className="mt-5 flex flex-row gap-4">
+                            <div className="input-group w-1/2">
+                                <label className="block text-xs font-semibold text-gray-500 mb-1.5">Major</label>                       
+                                <select  
+                                    name='category'
+                                    onChange={formik.handleChange}
+                                    onBlur={formik.handleBlur}
+                                    value={formik.values.category}
+                                    className="w-full px-3.5 py-2.5 text-sm text-gray-800 border border-gray-200 rounded-lg transition-shadow bg-white">
+                                    {(options?.talentCategories || []).map((p) => (
+                                        <option value={p}>{p}</option>
+                                        ))}
+                                </select>
+                            </div>
+                            <div className="input-group w-1/2">
+                                <label className="block text-xs font-semibold text-gray-500 mb-1.5">Skill level</label>                       
+                                <select  
+                                    name='skillLevel'
+                                    onChange={formik.handleChange}
+                                    onBlur={formik.handleBlur}
+                                    value={formik.values.skillLevel}
+                                    className="w-full px-3.5 py-2.5 text-sm text-gray-800 border border-gray-200 rounded-lg transition-shadow bg-white">
+                                    {(options?.skillLevels || []).map((p) => (
+                                        <option value={p}>{p}</option>
+                                        ))}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div className="mt-5 flex flex-row gap-4">
+                            <div className="input-group w-1/2">
+                                <label className="block text-xs font-semibold text-gray-500 mb-1.5">Province</label>                       
+                                <select  
+                                    name='province'
+                                    onChange={formik.handleChange}
+                                    onBlur={formik.handleBlur}
+                                    value={formik.values.province}
+                                    className="w-full px-3.5 py-2.5 text-sm text-gray-800 border border-gray-200 rounded-lg transition-shadow bg-white">
+                                    {(provinces || []).map((p,index) => (
+                                        <option key={index} value={p.id}>{p.name}</option>
+                                        ))}
+                                </select>
+                            </div>
+                            <div className="input-group w-1/2">
+                                <label className="block text-xs font-semibold text-gray-500 mb-1.5">Roll</label>                       
+                                <select  
+                                    name='role'
+                                    onChange={formik.handleChange}
+                                    onBlur={formik.handleBlur}
+                                    value={formik.values.role}
+                                    className="w-full px-3.5 py-2.5 text-sm text-gray-800 border border-gray-200 rounded-lg transition-shadow bg-white">
+                                    {(options?.roles || []).map((p, index) => (
+                                        <option key={index} value={p}>{p}</option>
+                                        ))}
+                                </select>
+                            </div>
                         </div>
                     </div>
 
@@ -282,32 +405,37 @@ export default function Profile(){
                         <h2 className="text-sm font-bold text-gray-900 mb-5">Contact</h2>
 
                         <div className="space-y-5">
-                        <div>
-                            <label className="block text-xs font-semibold text-gray-500 mb-1.5">Email</label>
-                            <input 
-                                type="email" 
-                                value={formData.email}
-                                onChange={handleChange} 
-                                name="email"
-                                className="w-full px-3.5 py-2.5 text-sm text-gray-800 border border-gray-200 rounded-lg transition-shadow"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-xs font-semibold text-gray-500 mb-1.5">Phone</label>
-                            <input 
-                                type="tel" 
-                                placeholder="+84 ..." 
-                                value={formData.phone}
-                                onChange={handleChange} 
-                                name="phone"
-                                maxLength={10}
-                                className="w-full px-3.5 py-2.5 text-sm text-gray-800 border border-gray-200 rounded-lg transition-shadow"
+                            <div>
+                                <label className="block text-xs font-semibold text-gray-500 mb-1.5">Email</label>
+                                <input 
+                                    type="email" 
+                                    value={formik.values.email}
+                                    onChange={formik.handleChange} 
+                                    onBlur={formik.handleBlur} 
+                                    name="email"
+                                    className="w-full px-3.5 py-2.5 text-sm text-gray-800 border border-gray-200 rounded-lg transition-shadow"
                                 />
-                        </div>
-                        <div>
-                            <label className="block text-xs font-semibold text-gray-500 mb-1.5">Website / Social</label>
-                            <input type="url" placeholder="https://" className="w-full px-3.5 py-2.5 text-sm text-gray-800 border border-gray-200 rounded-lg transition-shadow"/>
-                        </div>
+                                {formik.touched.email && formik.errors.email && (
+                                        <p className="text-red-500 text-xs">{formik.errors.email}</p>
+                                    )}
+                            </div>
+                            <div>
+                                <label className="block text-xs font-semibold text-gray-500 mb-1.5">Phone</label>
+                                <input 
+                                    type="tel" 
+                                    placeholder="+84 ..." 
+                                    value={formik.values.phoneNumber}
+                                    onChange={formik.handleChange} 
+                                    onBlur={formik.handleBlur} 
+                                    name="phoneNumber"
+                                    maxLength={10}
+                                    className="w-full px-3.5 py-2.5 text-sm text-gray-800 border border-gray-200 rounded-lg transition-shadow"
+                                    />
+                                {formik.touched.phoneNumber && formik.errors.phoneNumber && (
+                                        <p className="text-red-500 text-xs">{formik.errors.phoneNumber}</p>
+                                    )}
+                            </div>
+                        
                         </div>
                     </div>
 
