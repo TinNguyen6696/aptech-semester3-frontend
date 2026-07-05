@@ -251,7 +251,7 @@ export default function Achievements() {
 
     
     return (
-        <div className="max-w-2xl mx-auto bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+        <div className="max-w-3xl mx-auto mb-5 bg-white rounded-2xl border border-gray-100 shadow-sm px-6 sm:px-10 py-10">
             {/* Header */}
             <div className="mb-5">
                 <h2 className="text-lg font-bold text-gray-900">Achievements</h2>

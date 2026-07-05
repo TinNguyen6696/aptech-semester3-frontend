@@ -50,7 +50,7 @@ export default function HeaderLayout(){
 
                 <ul className="hidden md:flex items-center gap-6">
                     <li><a href="#" className="text-sm font-medium text-blue-600">Stories</a></li>
-                    <li><a href="#" className="text-sm font-medium text-gray-600 hover:text-gray-900">Explore</a></li>
+                    <li><a href="/explore" className="text-sm font-medium text-gray-600 hover:text-gray-900">Explore</a></li>
                     <li><a href="#" className="text-sm font-medium text-gray-600 hover:text-gray-900">Contests</a></li>
                     <li><a href="#" className="text-sm font-medium text-gray-600 hover:text-gray-900">Mentors</a></li>
                     <li><a href="#" className="text-sm font-medium text-gray-600 hover:text-gray-900">Communities</a></li>
@@ -128,8 +128,8 @@ export default function HeaderLayout(){
                 {isMenuOpen && (
                     <div id="mobileMenu" className="md:hidden border-t border-gray-100 px-4 py-3">
                         <ul className="flex flex-col gap-3">
-                            <li><a href="#" className="block text-sm font-medium text-blue-600">Stories</a></li>
-                            <li><a href="#" className="block text-sm font-medium text-gray-600">Explore</a></li>
+                            <li><a href="/" className="block text-sm font-medium text-blue-600">Stories</a></li>
+                            <li><a href="/explore" className="block text-sm font-medium text-gray-600">Explore</a></li>
                             <li><a href="#" className="block text-sm font-medium text-gray-600">Contests</a></li>
                             <li><a href="#" className="block text-sm font-medium text-gray-600">Mentors</a></li>
                             <li><a href="#" className="block text-sm font-medium text-gray-600">Communities</a></li>

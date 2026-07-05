@@ -1,11 +1,95 @@
 import { createFileRoute, redirect } from "@tanstack/react-router"
-
+import { useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { PageTitle } from "@/components/PageTitle/pagetitle"
+import { API } from "@/lib/apiendpoint"
 
 export const Route = createFileRoute("/_layout/")({
   component: HomePage,
 })
+
+function VideoCard({
+  videoSrc,
+  poster,
+  badge,
+  caption,
+  className,
+  playButtonSize = "w-14 h-14",
+  iconColor,
+}: {
+  videoSrc: string
+  poster?: string
+  badge: string
+  caption?: string
+  className: string
+  playButtonSize?: string
+  iconColor: string
+}) {
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const [isPlaying, setIsPlaying] = useState(true)
+
+  const togglePlay = () => {
+    const video = videoRef.current
+    if (!video) return
+    if (video.paused) {
+      video.play()
+      setIsPlaying(true)
+    } else {
+      video.pause()
+      setIsPlaying(false)
+    }
+  }
+
+  return (
+    <div className={`${className} group rounded-2xl shadow-xl overflow-hidden flex flex-col justify-between`}>
+      <video
+        ref={videoRef}
+        src={videoSrc}
+        poster={poster}
+        className="absolute inset-0 w-full h-full object-cover"
+        autoPlay
+        muted
+        loop
+        playsInline
+      />
+      {/* lớp phủ tối nhẹ để chữ/badge dễ đọc trên nền video */}
+      <div className="absolute inset-0 bg-black/20" />
+
+      <div className="relative z-10 p-4 flex flex-col justify-between h-full">
+        <span className="self-start bg-white/25 text-white text-[10px] font-bold tracking-wide px-2.5 py-1 rounded-full backdrop-blur-sm">
+          {badge}
+        </span>
+
+        <button
+          onClick={togglePlay}
+          className={`self-center ${playButtonSize} rounded-full bg-white flex items-center justify-center shadow-lg
+            opacity-0 scale-90 group-hover:opacity-100 group-hover:scale-100
+            transition-all duration-200
+            ${!isPlaying ? "opacity-100 scale-100" : ""}`}
+          aria-label={isPlaying ? "Pause" : "Play"}
+        >
+          {isPlaying ? (
+            <svg width="18" height="18" viewBox="0 0 24 24" fill={iconColor}>
+              <rect x="6" y="5" width="4" height="14" />
+              <rect x="14" y="5" width="4" height="14" />
+            </svg>
+          ) : (
+            <svg width="20" height="20" viewBox="0 0 24 24" fill={iconColor}>
+              <path d="M8 5v14l11-7z" />
+            </svg>
+          )}
+        </button>
+
+        {caption && <p className="text-white text-xs font-medium">{caption}</p>}
+        {!caption && <div />}
+      </div>
+    </div>
+  )
+}
+
+
+
+
 
 function HomePage() {
   return (
@@ -54,38 +138,40 @@ function HomePage() {
             </div>
           </div>
 
-          <div className="relative h-[380px] sm:h-[440px] flex items-center justify-center">
+          <div className="relative flex items-center justify-center pt-8">
 
-            <div className="card-tilt-1 absolute w-[230px] h-[300px] rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 shadow-xl p-4 flex flex-col justify-between top-2 left-4 sm:left-10">
-              <span className="self-start bg-white/25 text-white text-[10px] font-bold tracking-wide px-2.5 py-1 rounded-full backdrop-blur-sm">SINGER</span>
-              <button className="self-center w-14 h-14 rounded-full bg-white flex items-center justify-center shadow-lg">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="#7c3aed"><path d="M8 5v14l11-7z"/></svg>
-              </button>
-              <p className="text-white text-xs font-medium">Elena · live loop</p>
-            </div>
-
-            <div className="card-tilt-3 absolute w-[210px] h-[220px] rounded-2xl bg-gradient-to-br from-emerald-500 to-green-600 shadow-xl p-4 flex flex-col justify-between bottom-0 left-1/2 -translate-x-1/2 sm:left-[38%]">
-              <span className="self-start bg-white/25 text-white text-[10px] font-bold tracking-wide px-2.5 py-1 rounded-full backdrop-blur-sm">ARTIST</span>
-              <button className="self-center w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-lg">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="#059669"><path d="M8 5v14l11-7z"/></svg>
-              </button>
-            </div>
-
-            <div className="card-tilt-2 absolute w-[220px] h-[290px] rounded-2xl bg-gradient-to-br from-orange-500 to-amber-600 shadow-xl p-4 flex flex-col justify-between top-4 right-2 sm:right-6">
-              <div className="flex items-start justify-between">
-                <span className="bg-white/25 text-white text-[10px] font-bold tracking-wide px-2.5 py-1 rounded-full backdrop-blur-sm">DANCER</span>
-              </div>
-              <button className="self-center w-14 h-14 rounded-full bg-white flex items-center justify-center shadow-lg">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="#ea580c"><path d="M8 5v14l11-7z"/></svg>
-              </button>
-              <p className="text-white text-xs font-medium">Dev · rooftop solo</p>
-            </div>
-
-            <div className="absolute top-0 right-6 sm:right-10 bg-white rounded-xl shadow-lg px-3.5 py-2 flex items-center gap-1.5 z-10">
+            <div className="absolute -top-6 sm:-top-8 right-2 sm:right-4 bg-white rounded-xl shadow-lg px-3.5 py-2 flex items-center gap-1.5 z-40">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="#f59e0b"><path d="M12 2l2.9 6.9L22 10l-5.5 4.8L18 22l-6-3.6L6 22l1.5-7.2L2 10l7.1-1.1L12 2z"/></svg>
               <span className="text-xs font-semibold text-gray-700">"Got my first gig here"</span>
             </div>
 
+            <div className="relative w-full max-w-[340px] sm:max-w-[480px] h-[345px] sm:h-[420px] mt-6">
+
+              <VideoCard
+                className="absolute top-0 left-0 w-[150px] sm:w-[200px] h-[220px] sm:h-[260px] rotate-[-6deg] z-10"
+                videoSrc={API.URL + "/uploads/14599055_1080_1920_30fps.mp4"}
+                badge="SINGER"
+                caption="Elena · live loop"
+                iconColor="#7c3aed"
+              />
+
+              <VideoCard
+                className="absolute top-4 sm:top-6 right-0 w-[150px] sm:w-[200px] h-[220px] sm:h-[260px] rotate-[5deg] z-20"
+                videoSrc={API.URL + "/uploads/14599113_1080_1920_30fps.mp4"}
+                badge="DANCER"
+                caption="Dev · rooftop solo"
+                iconColor="#ea580c"
+              />
+
+              <VideoCard
+                className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[140px] sm:w-[180px] h-[150px] sm:h-[190px] rotate-[-3deg] z-30 ring-4 ring-white"
+                videoSrc={API.URL + "/uploads/16183418_2160_3840_30fps.mp4"}
+                badge="ARTIST"
+                playButtonSize="w-11 h-11"
+                iconColor="#059669"
+              />
+
+            </div>
           </div>
         </div>
       </section>

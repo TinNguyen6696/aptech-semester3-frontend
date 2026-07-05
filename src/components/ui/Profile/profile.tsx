@@ -180,7 +180,7 @@ export default function Profile(){
     };
     return(
         <>
-        <div className="max-w-3xl mx-auto px-6 sm:px-10 py-10">
+        <div className="max-w-3xl mx-auto mb-5 mt-5">
 
                 <div className="mb-4">
                     <div className="flex gap-3">
