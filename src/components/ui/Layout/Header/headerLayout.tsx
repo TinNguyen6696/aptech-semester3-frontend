@@ -1,14 +1,31 @@
 import { useState, useRef, useEffect } from 'react';
+import { useLocation } from '@tanstack/react-router';
 import './headerLayout.css';
 import { StringValue } from '@/lib/stringValue';
 import { API } from '@/lib/apiendpoint';
 import { useUserStore } from '@/Store/userStore';
  
+const NAV_ITEMS = [
+    { label: 'Stories', href: '/stories' },
+    { label: 'Explores', href: '/explores' },
+    { label: 'Contests', href: '/contests' },
+    { label: 'Mentors', href: '/mentors' },
+    { label: 'Communities', href: '/communities' },
+    { label: 'MyVideos', href:'/myvideos'}
+];
+
+
 export default function HeaderLayout(){
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const dropdownRef = useRef(null);
-    
+    const location = useLocation();
+    const currentPath = location.pathname;
+    const isActive = (href) => {
+        if (href === '/') return currentPath === '/';
+        return currentPath === href || currentPath.startsWith(href + '/');
+    };
+
     const { userInfo, updateUserInfo, clearUserInfo } = useUserStore();
     const previewUrl = userInfo?.profileImageUrl 
         ? `${API.URL}/${userInfo.profileImageUrl}` 
@@ -43,18 +60,27 @@ export default function HeaderLayout(){
             <nav className="flex items-center justify-between px-4 sm:px-6 py-3.5 max-w-[1400px] mx-auto">
 
                 <div className="flex items-center gap-6 sm:gap-8">
-                <a href="/" className="flex items-center gap-2">
-                    <span className="w-7 h-7 rounded-md bg-blue-600 text-white flex items-center justify-center text-sm flex-shrink-0">★</span>
-                    <span className="font-bold text-[15px] text-gray-900">Spotlight</span>
-                </a>
-
-                <ul className="hidden md:flex items-center gap-6">
-                    <li><a href="#" className="text-sm font-medium text-blue-600">Stories</a></li>
-                    <li><a href="/explore" className="text-sm font-medium text-gray-600 hover:text-gray-900">Explore</a></li>
-                    <li><a href="#" className="text-sm font-medium text-gray-600 hover:text-gray-900">Contests</a></li>
-                    <li><a href="#" className="text-sm font-medium text-gray-600 hover:text-gray-900">Mentors</a></li>
-                    <li><a href="#" className="text-sm font-medium text-gray-600 hover:text-gray-900">Communities</a></li>
-                </ul>
+                    <a href="/" className="flex items-center gap-2">
+                        <span className="w-7 h-7 rounded-md bg-blue-600 text-white flex items-center justify-center text-sm flex-shrink-0">★</span>
+                        <span className="font-bold text-[15px] text-gray-900">Spotlight</span>
+                    </a>
+                    <ul className="hidden md:flex items-center gap-6">
+                        {NAV_ITEMS.map((item) => (
+                            <li key={item.href}>
+                                <a
+                                    href={item.href}
+                                    className={`text-sm font-medium transition-colors ${
+                                        isActive(item.href)
+                                            ? 'text-blue-600'
+                                            : 'text-gray-600 hover:text-gray-900'
+                                    }`}
+                                >
+                                    {item.label}
+                                </a>
+                            </li>
+                        ))}
+                    </ul>
+                
                 </div>
 
                 <div className="hidden md:flex items-center gap-5">
@@ -128,11 +154,11 @@ export default function HeaderLayout(){
                 {isMenuOpen && (
                     <div id="mobileMenu" className="md:hidden border-t border-gray-100 px-4 py-3">
                         <ul className="flex flex-col gap-3">
-                            <li><a href="/" className="block text-sm font-medium text-blue-600">Stories</a></li>
-                            <li><a href="/explore" className="block text-sm font-medium text-gray-600">Explore</a></li>
-                            <li><a href="#" className="block text-sm font-medium text-gray-600">Contests</a></li>
-                            <li><a href="#" className="block text-sm font-medium text-gray-600">Mentors</a></li>
-                            <li><a href="#" className="block text-sm font-medium text-gray-600">Communities</a></li>
+                            <li><a href="/Stories" className="block text-sm font-medium text-blue-600">Stories</a></li>
+                            <li><a href="/explores" className="block text-sm font-medium text-gray-600">Explores</a></li>
+                            <li><a href="/contests" className="block text-sm font-medium text-gray-600">Contests</a></li>
+                            <li><a href="/mentors" className="block text-sm font-medium text-gray-600">Mentors</a></li>
+                            <li><a href="/comunities" className="block text-sm font-medium text-gray-600">Communities</a></li>
                         </ul>
 
                         <div className="mt-4 pt-4 border-t border-gray-100">

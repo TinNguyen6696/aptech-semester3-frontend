@@ -1,6 +1,6 @@
 
 
-export default function Explore(){
+export default function Explores(){
     return (
         <>
             <section className="relative bg-gradient-to-b from-slate-50 to-white px-6 py-24 text-center">
@@ -422,6 +422,67 @@ export default function Explore(){
 
                 </div>
             </section>
+            <section className="px-6 sm:px-10 py-16 bg-white">
+                <div className="max-w-7xl mx-auto">
+
+                    <h2 className="text-2xl sm:text-[26px] font-bold text-gray-900 text-center mb-10">
+                    Get started in three steps
+                    </h2>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+
+                    <div className="border border-gray-100 rounded-2xl shadow-sm p-6">
+                        <div className="flex items-center gap-2.5 mb-5">
+                        <span className="w-7 h-7 rounded-lg bg-blue-600 text-white flex items-center justify-center text-sm font-bold">
+                            1
+                        </span>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M12 19V5"/>
+                            <path d="M5 12l7-7 7 7"/>
+                        </svg>
+                        </div>
+
+                        <h3 className="text-base font-bold text-gray-900 mb-1.5">Upload your talent</h3>
+                        <p className="text-sm text-gray-500 leading-relaxed">
+                        Post a video of your performance and tag it by category.
+                        </p>
+                    </div>
+
+                    <div className="border border-gray-100 rounded-2xl shadow-sm p-6">
+                        <div className="flex items-center gap-2.5 mb-5">
+                        <span className="w-7 h-7 rounded-lg bg-purple-500 text-white flex items-center justify-center text-sm font-bold">
+                            2
+                        </span>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a855f7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                        </svg>
+                        </div>
+
+                        <h3 className="text-base font-bold text-gray-900 mb-1.5">Get real feedback</h3>
+                        <p className="text-sm text-gray-500 leading-relaxed">
+                        The community comments, rates and votes to help you grow.
+                        </p>
+                    </div>
+
+                    <div className="border border-gray-100 rounded-2xl shadow-sm p-6">
+                        <div className="flex items-center gap-2.5 mb-5">
+                        <span className="w-7 h-7 rounded-lg bg-emerald-500 text-white flex items-center justify-center text-sm font-bold">
+                            3
+                        </span>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M12 2l2.9 6.9L22 10l-5.5 4.8L18 22l-6-3.6L6 22l1.5-7.2L2 10l7.1-1.1L12 2z"/>
+                        </svg>
+                        </div>
+
+                        <h3 className="text-base font-bold text-gray-900 mb-1.5">Get discovered</h3>
+                        <p className="text-sm text-gray-500 leading-relaxed">
+                        Mentors and scouts reach out with real opportunities.
+                        </p>
+                    </div>
+
+                    </div>
+                </div>
+                </section>
         </>
     )
 }
