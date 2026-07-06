@@ -5,18 +5,18 @@ import { API } from "@/lib/apiendpoint";
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import axiosClient from "@/services/axiosClient";
-import { useNavigate } from "@tanstack/react-router";
 import { toast } from 'react-toastify';
 import { useUserStore } from "@/Store/userStore";
+import type { ProfileFormValues } from "@/types/profile.types";
+import type { Province, RegisterOptions } from "@/types/auth.types";
 
 export default function Profile(){
-    const navigate = useNavigate();
     const [localPreview, setLocalPreview] = useState<string | null>(null);
     const { userInfo, updateUserInfo } = useUserStore();
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [isEditing, setIsEditing] = useState(false);
-    const [provinces, setProvinces] = useState([])
-    const [options, setOptions] = useState([])
+    const [provinces, setProvinces] = useState<Province[]>([])
+    const [options, setOptions] = useState<RegisterOptions>({})
     const derivedPreviewUrl = userInfo?.profileImageUrl 
         ? `${API.URL}/${userInfo.profileImageUrl}` 
         : null;
@@ -45,19 +45,6 @@ export default function Profile(){
 
         fetchOptions()
     }, []) 
-    interface ProfileFormValues {
-        firstName: string;
-        lastName: string;
-        username: string;
-        email: string;
-        phoneNumber: string;
-        bio: string;
-        provinceName: string;
-        provinceId:number;
-        category:string;
-        skillLevel:string;
-        role:string;
-    }
     const validationSchema = Yup.object({
         firstName: Yup.string().required('This field is required'),
         lastName: Yup.string().required('This field is required'),
@@ -84,7 +71,7 @@ export default function Profile(){
         role:userInfo?.role || ''
         },
         validationSchema: validationSchema,
-        onSubmit: async (values, { setSubmitting, resetForm, setErrors }) => {
+        onSubmit: async (values, { setSubmitting }) => {
             const req = {
                 Username:values.username,
                 FirstName:values.firstName,
@@ -94,10 +81,9 @@ export default function Profile(){
                 Role:values.role,
                 PrimaryCategory:values.category,
                 SkillLevel:values.skillLevel,
-                ProvinceId:values.provinceId,
+                ProvinceId:Number(values.provinceId),
                 PhoneNumber:values.phoneNumber
             }
-            console.log("check email: ", req)
             try {
                 const res = await axiosClient.put(API.AXIOS_UPDATE_PROFILE, req);
                 if(res.data.isSuccess){
@@ -109,12 +95,12 @@ export default function Profile(){
                     toast.error(res.data.message);
                 }                          
             } catch (error) {
-                if (error.response) {
-                    const serverData = error.response.data; 
+                if (axios.isAxiosError(error) && error.response) {
+                    const serverData = error.response.data;
                     toast.error(serverData.message || "Something went wrong");
                 } else {
                     console.log("No response received:", error);
-                }                       
+                }
             } finally {
                 setSubmitting(false);
             }

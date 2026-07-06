@@ -1,12 +1,14 @@
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
-import axios from 'axios'
+import axios from 'axios';
 import { API } from '@/lib/apiendpoint';
 import axiosClient from '@/services/axiosClient';
 import { useNavigate } from "@tanstack/react-router";
 import { toast } from 'react-toastify';
+import { StringValue } from '@/lib/stringValue';
+import type { RegisterFormProps } from '@/types/auth.types';
 
-export default function RegisterForm({provinces,options}){
+export default function RegisterForm({provinces,options}: RegisterFormProps){
     const categories = options?.talentCategories || [];
     const skillLevel = options?.skillLevels || [];
     const roles = options?.roles || [];
@@ -29,11 +31,11 @@ export default function RegisterForm({provinces,options}){
         password: '',
         category: categories[0] || '',
         skillLevel: skillLevel[0] || '',
-        province: '',
+        province: provinces[0]?.id ?? '',
         role: roles[0] || '',
         },
         validationSchema: validationSchema,
-        onSubmit: async (values, { setSubmitting, resetForm, setErrors }) => {
+        onSubmit: async (values, { setSubmitting, resetForm }) => {
             
             const req = {
                 Username:values.userName,
@@ -44,28 +46,27 @@ export default function RegisterForm({provinces,options}){
                 Password:values.password,
                 PrimaryCategory:values.category,
                 SkillLevel:values.skillLevel,
-                ProvinceId:values.province
+                ProvinceId:Number(values.province)
             }
-            console.log("check req: ", req)
             try {
                 const res = await axiosClient.post(API.AXIOS_REGISTER, req);
                 if(res.data.isSuccess){
                     const token = res.data.data.accessToken;
-                    console.log("check token: ", res.data)
-                    localStorage.setItem('accessToken', token);
+                    localStorage.setItem(StringValue.ACCESS_TOKEN, token);
+                    localStorage.setItem(StringValue.USER_INFO, JSON.stringify(res.data.data.user));
                     navigate({ to: '/' });
                 }else{
-                    console.log("check lỗi: ", res.data.mesage);
+                    console.log("check lỗi: ", res.data.message);
                 }
                 resetForm();
             
             } catch (error) {
-                if (error.response) {
-                    const serverData = error.response.data; 
+                if (axios.isAxiosError(error) && error.response) {
+                    const serverData = error.response.data;
                     toast.error(serverData.message || "Có lỗi xảy ra");
                 } else {
                     console.log("Lỗi không có response:", error);
-                }                       
+                }
             } finally {
                 setSubmitting(false);
             }
@@ -79,7 +80,7 @@ export default function RegisterForm({provinces,options}){
                 <span className="text-xs">Start showcasing your talent today. Free forever.</span>
                 <form onSubmit={formik.handleSubmit} className="mt-4">
                     <div className="flex gap-2">
-                        <div className="input-group">
+                        <div className="input-group flex-1">
                             <label className="block text-gray-700 text-sm font-bold mb-2">First name</label>
                             <input  name='firstName' 
                                     className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500" 
@@ -94,7 +95,7 @@ export default function RegisterForm({provinces,options}){
                             )}
                         </div>
 
-                        <div className="input-group">
+                        <div className="input-group flex-1">
                             <label className="block text-gray-700 text-sm font-bold mb-2">Last name</label>
                             <input  name='lastName' 
                                     className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500" 

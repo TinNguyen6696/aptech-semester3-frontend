@@ -4,6 +4,7 @@ import axios from 'axios'
 import LoginForm from '@/components/ui/Form/Login/loginForm'
 import RegisterForm from '@/components/ui/Form/Login/registerForm'
 import { API } from '@/lib/apiendpoint'
+import type { Province, RegisterOptions } from '@/types/auth.types'
 
 export const Route = createFileRoute('/login')({
   component: RouteComponent,
@@ -11,8 +12,8 @@ export const Route = createFileRoute('/login')({
 
 function RouteComponent() {
   const [isLogin, setIsLogin] = useState(true)
-  const [provinces, setProvinces] = useState([])
-  const [options, setOptions] = useState([])
+  const [provinces, setProvinces] = useState<Province[]>([])
+  const [options, setOptions] = useState<RegisterOptions>({})
   useEffect(() => {
       const fetchProvinces = async () => {
         try {
@@ -41,8 +42,8 @@ function RouteComponent() {
 
   return (
     <>
-      <div className='main-login grid grid-cols-12 gap-4'>
-        <div className='left-content col-span-4'>
+      <div className='main-login grid grid-cols-1 lg:grid-cols-12 gap-4'>
+        <div className='left-content hidden lg:block lg:col-span-4'>
           <div className="sidebar">
             <div className="logo">
               <div className="logo-badge">⭐</div>
@@ -86,7 +87,7 @@ function RouteComponent() {
           </div>
         </div>
 
-        <div className='right-content flex flex-col justify-center items-center col-span-8'>
+        <div className='right-content flex flex-col justify-center items-center col-span-1 lg:col-span-8 px-4'>
           <div className='right-content-cover'>
             <div className="tab-pane-custom flex gap-4">
               <button 

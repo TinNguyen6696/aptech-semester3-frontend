@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type JSX } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import axios from "axios";
@@ -7,25 +7,15 @@ import { StringValue } from "@/lib/stringValue";
 import axiosClient from "@/services/axiosClient";
 import { toast } from "react-toastify";
 import DateUtil from "@/lib/dateUtil";
-
-interface AchievementTypeConfig {
-    label: string;
-    badgeBg: string;
-    badgeColor: string;
-    iconBg: string;
-    iconColor: string;
-    icon: JSX.Element;
-}
+import type { AchievementTypeConfig, Achievement, AchievementFormValues } from "@/types/achievement.types";
 
 export default function Achievements() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [typeOptions, setTypeOptions] = useState<AchievementTypeConfig[]>([]);
-    const [achievements, setAchievements] = useState<AchievementRecord[]>([]);
-    const [rawAchievementsData, setRawAchievementsData] = useState([]); 
-    const [achievementsData, setAchievementsData] = useState([]);
+    const [rawAchievementsData, setRawAchievementsData] = useState<Achievement[]>([]);
     const [deleteTarget, setDeleteTarget] = useState<{ id: string; title: string } | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
-    const [editTarget, setEditTarget] = useState<any | null>(null);
+    const [editTarget, setEditTarget] = useState<Achievement | null>(null);
 
     const mapTypeAchievement = (achievementTypes: string[]): AchievementTypeConfig[] => {
         const configAchievementType: AchievementTypeConfig[] = [];
@@ -145,6 +135,7 @@ export default function Achievements() {
         fetchRawAchievementData();
     }, []);
     useEffect(() => {
+
         const fetchOptions = async () => {
             try {
                 const response = await axios.get(API.OPTION_GET_ALL);
@@ -167,7 +158,7 @@ export default function Achievements() {
             certUrl: Yup.string().trim().url("Enter a valid URL").nullable().notRequired(),
         }); 
     }, [typeOptions]);
-    const formik = useFormik({
+    const formik = useFormik<AchievementFormValues>({
         enableReinitialize: true,
         initialValues: {
             type: editTarget?.type ?? "",
@@ -178,7 +169,7 @@ export default function Achievements() {
             certUrl: editTarget?.certUrl ?? "",
         },
         validationSchema: achievementSchema,
-        onSubmit: async (values, { setSubmitting, resetForm, setErrors }) => {
+        onSubmit: async (values) => {
             const req = {
                 Type:values.type || "",
                 Title:values.title || "",
@@ -201,12 +192,12 @@ export default function Achievements() {
                     toast.error(res.data.message);
                 }                          
             } catch (error) {
-                if (error.response) {
-                    const serverData = error.response.data; 
+                if (axios.isAxiosError(error) && error.response) {
+                    const serverData = error.response.data;
                     toast.error(serverData.message || "Something went wrong");
                 } else {
                     console.log("No response received:", error);
-                }                       
+                }
             } finally {
                 // setIsModalOpen(false);
                 // formik.resetForm();
@@ -219,7 +210,7 @@ export default function Achievements() {
         setIsModalOpen(true);
     };
 
-    const openEditModal = (item: any) => {
+    const openEditModal = (item: Achievement) => {
         setEditTarget(item);
         setIsModalOpen(true);
     };
@@ -241,8 +232,8 @@ export default function Achievements() {
             } else {
                 toast.error(res.data.message ?? "Failed to delete achievement");
             }
-        } catch (error: any) {
-            toast.error(error.response?.data?.message ?? "Something went wrong");
+        } catch (error) {
+            toast.error(axios.isAxiosError(error) ? error.response?.data?.message ?? "Something went wrong" : "Something went wrong");
         } finally {
             setIsDeleting(false);
         }
