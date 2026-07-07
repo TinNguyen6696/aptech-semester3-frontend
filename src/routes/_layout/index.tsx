@@ -52,7 +52,6 @@ function VideoCard({
         loop
         playsInline
       />
-      {/* lớp phủ tối nhẹ để chữ/badge dễ đọc trên nền video */}
       <div className="absolute inset-0 bg-black/20" />
 
       <div className="relative z-10 p-4 flex flex-col justify-between h-full">

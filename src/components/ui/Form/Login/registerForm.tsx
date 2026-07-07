@@ -15,11 +15,11 @@ export default function RegisterForm({provinces,options}: RegisterFormProps){
     const navigate = useNavigate();
 
     const validationSchema = Yup.object({
-        firstName: Yup.string().required('Bắt buộc nhập'),
-        lastName: Yup.string().required('Bắt buộc nhập'),
-        userName: Yup.string().required('Bắt buộc nhập'),
-        email: Yup.string().email('Email không hợp lệ').required('Bắt buộc nhập'),
-        password: Yup.string().min(6, 'Mật khẩu phải từ 6 ký tự').required('Bắt buộc nhập'),
+        firstName: Yup.string().required('This field is required'),
+        lastName: Yup.string().required('This field is required'),
+        userName: Yup.string().required('This field is required'),
+        email: Yup.string().email('Invalid email').required('This field is required'),
+        password: Yup.string().min(6, 'Password must be at least 6 characters').required('This field is required'),
     });
 
     const formik = useFormik({
@@ -51,21 +51,24 @@ export default function RegisterForm({provinces,options}: RegisterFormProps){
             try {
                 const res = await axiosClient.post(API.AXIOS_REGISTER, req);
                 if(res.data.isSuccess){
-                    const token = res.data.data.accessToken;
-                    localStorage.setItem(StringValue.ACCESS_TOKEN, token);
-                    localStorage.setItem(StringValue.USER_INFO, JSON.stringify(res.data.data.user));
-                    navigate({ to: '/' });
+                    // const token = res.data.data.accessToken;
+                    // localStorage.setItem(StringValue.ACCESS_TOKEN, token);
+                    // localStorage.setItem(StringValue.USER_INFO, JSON.stringify(res.data.data.user));
+                    navigate({ 
+                        to: '/verify-mail-request',
+                        search: { email: values.email }
+                    });
                 }else{
-                    console.log("check lỗi: ", res.data.message);
+                    console.log("check error: ", res.data.message);
                 }
                 resetForm();
             
             } catch (error) {
                 if (axios.isAxiosError(error) && error.response) {
                     const serverData = error.response.data;
-                    toast.error(serverData.message || "Có lỗi xảy ra");
+                    toast.error(serverData.message || "An error occurred");
                 } else {
-                    console.log("Lỗi không có response:", error);
+                    console.log("Error with no response:", error);
                 }
             } finally {
                 setSubmitting(false);
@@ -219,7 +222,7 @@ export default function RegisterForm({provinces,options}: RegisterFormProps){
                         disabled={formik.isSubmitting} 
                         className="cursor-pointer mt-3 w-full bg-blue-500 text-white font-bold py-2 px-4 rounded hover:bg-blue-600 transition duration-300"
                         >
-                        {formik.isSubmitting ? "Đang gửi..." : "Create account"}
+                        {formik.isSubmitting ? "Submitting..." : "Create account"}
                     </button>
                 </form>
             </div>              
