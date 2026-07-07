@@ -19,6 +19,8 @@ export const API = {
     AXIOS_SEND_FORGOT_PW :`auth/forgot-password`,
     AXIOS_RESET_PW:`auth/reset-password`,
 
+    AXIOS_CHANGE_PW:'auth/change-password',
+
     AXIOS_VERIFY_EMAIL:`auth/verify-email`,
     AXIOS_RESEND_VERIFY_EMAIL:`auth/resend-verification`,
 

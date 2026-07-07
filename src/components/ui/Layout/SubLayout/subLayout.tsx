@@ -6,10 +6,10 @@ export default function SubLayout({ children }: SubLayoutProps) {
     <div className='main-login grid grid-cols-1 lg:grid-cols-12 gap-4'>
                     <div className='left-content hidden lg:block lg:col-span-4'>
                       <div className="sidebar">
-                        <div className="logo">
+                        <a className="logo" href='/'>
                           <div className="logo-badge">⭐</div>
                           <div className="logo-name">Spotlight</div>
-                        </div>
+                        </a>
             
                         <h1 className="headline">Every talent has<br/>a place to be <em>seen.</em></h1>
                         <p className="subcopy">Join 50,000+ creators sharing their work, finding their community, and getting discovered.</p>
@@ -47,6 +47,7 @@ export default function SubLayout({ children }: SubLayoutProps) {
                         </div>
                       </div>
                     </div>
+                    
                     {children}                     
                   </div>
   );
