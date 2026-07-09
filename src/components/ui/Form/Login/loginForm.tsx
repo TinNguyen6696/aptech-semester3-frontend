@@ -59,24 +59,7 @@ export default function LoginForm(){
     });
 
     const onSendMailForgotPw = async () => {
-        formik.setFieldTouched('email', true);
-        if (!formik.values.email) {
-            toast.error('Please enter your email before resetting your password');
-            return;
-        }
-        try {
-            await Yup.reach(validationSchema, 'email').validate(formik.values.email);
-        } catch (err) {
-            toast.error(err.message);
-            return;
-        }
-        const req_mail = {
-            Email:formik.values.email
-        };
-        const res = await axiosClient.post(API.AXIOS_SEND_FORGOT_PW, req_mail);
-        if(res.data.isSuccess){
-            toast.success("Mail has been send!");
-        }
+        navigate({ to: '/forgot-password' });
     }
 
 

@@ -1,23 +1,58 @@
+import { API } from '@/lib/apiendpoint';
+import { StringValue } from '@/lib/stringValue';
+import axiosClient from '@/services/axiosClient';
 import { useState, useRef } from 'react';
+import { toast } from 'react-toastify';
 
-const CATEGORIES = ['Music', 'Dance', 'Art', 'Coding', 'Acting', 'Comedy', 'Writing', 'Photo'];
+const CATEGORIES = ['Singer', 'Dancer', 'Artist', 'Designer', 'Coder', 'Photographer'];
+const ALLOWED_VIDEO_TYPE = 'video/mp4';
+const MAX_VIDEO_SIZE_BYTES = 50 * 1024 * 1024;
 
-export default function UploadVideoModal({ isOpen, onClose }) {
-  const [file, setFile] = useState(null);
-  const [previewUrl, setPreviewUrl] = useState(null);
+const emptySlot = () => ({
+  file: null,
+  previewUrl: null,
+  title: '',
+  category: '',
+  description: '',
+  visibility: StringValue.TYPE_VIDEO_PUBLIC,
+  isUploading: false,
+  isDone: false,
+  error: null,
+});
+
+export default function UploadVideoModal({ isOpen, onClose, onUploadSuccess }) {
+  const [slot, setSlot] = useState(emptySlot());
   const [isDragging, setIsDragging] = useState(false);
-  const [title, setTitle] = useState('');
-  const [category, setCategory] = useState('');
-  const [description, setDescription] = useState('');
-  const [uploadProgress, setUploadProgress] = useState(null);
   const fileInputRef = useRef(null);
-
   if (!isOpen) return null;
 
+  const updateSlot = (patch) => {
+    setSlot((prev) => ({ ...prev, ...patch }));
+  };
+
   const handleFile = (selectedFile) => {
-    if (!selectedFile || !selectedFile.type.startsWith('video/')) return;
-    setFile(selectedFile);
-    setPreviewUrl(URL.createObjectURL(selectedFile));
+    if (!selectedFile) return;
+
+    if (selectedFile.type !== ALLOWED_VIDEO_TYPE) {
+      toast.error('Only MP4 video format is allowed.');
+      return;
+    }
+
+    if (selectedFile.size > MAX_VIDEO_SIZE_BYTES) {
+      toast.error(`File is too large (${(selectedFile.size / (1024 * 1024)).toFixed(1)}MB). Maximum file size is 50MB.`);
+      return;
+    }
+    if (slot.previewUrl) URL.revokeObjectURL(slot.previewUrl);
+    updateSlot({
+      file: selectedFile,
+      previewUrl: URL.createObjectURL(selectedFile),
+      uploadProgress: null,
+    });
+  };
+
+  const removeFile = () => {
+    if (slot.previewUrl) URL.revokeObjectURL(slot.previewUrl);
+    updateSlot({ file: null, previewUrl: null, uploadProgress: null });
   };
 
   const handleDrop = (e) => {
@@ -27,35 +62,50 @@ export default function UploadVideoModal({ isOpen, onClose }) {
   };
 
   const handlePublish = () => {
-    // Giả lập upload progress — thay bằng logic call API thật của bạn
-    setUploadProgress(0);
-    const interval = setInterval(() => {
-      setUploadProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          return 100;
-        }
-        return prev + 10;
+    if (!slot.file) return;
+    submitVideo(slot);
+  };
+
+  const submitVideo = async (currentSlot) => {
+    updateSlot({ isUploading: true, error: null });
+    try {
+      const fd = new FormData();
+      fd.append('File', currentSlot.file);
+      fd.append('Title', currentSlot.title);
+      fd.append('Category', currentSlot.category);
+      fd.append('Description', currentSlot.description);
+      fd.append('Visibility', currentSlot.visibility);
+      console.log("check file: ", currentSlot.file)
+      const res = await axiosClient.post(API.AXIOS_VIDEO_UPLOAD, fd, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
       });
-    }, 200);
+      if (res.data.isSuccess) {
+        toast.success('Upload video success');
+        onUploadSuccess?.(res.data);
+        resetAndClose();
+      }else {
+        toast.error(res.data.message || 'Upload failed');
+        updateSlot({ isUploading: false });
+      }
+    } catch (err) {
+       toast.error(err.response?.data?.message || 'Upload failed');
+      updateSlot({ isUploading: false, error: err.message });
+    }
   };
 
   const resetAndClose = () => {
-    if (previewUrl) URL.revokeObjectURL(previewUrl);
-    setFile(null);
-    setPreviewUrl(null);
-    setTitle('');
-    setCategory('');
-    setDescription('');
-    setUploadProgress(null);
+    if (slot.previewUrl) URL.revokeObjectURL(slot.previewUrl);
+    setSlot(emptySlot());
     onClose();
   };
 
+  const canPublish = !!slot.file && !!slot.title && !!slot.category;
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-
-        {/* Header */}
+      <div className="bg-white rounded-3xl shadow-xl w-full max-w-4xl h-[88vh] flex flex-col overflow-hidden">
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
           <h2 className="text-base font-bold text-gray-900">Upload your talent</h2>
           <button
@@ -69,16 +119,15 @@ export default function UploadVideoModal({ isOpen, onClose }) {
           </button>
         </div>
 
-        <div className="p-6 space-y-5">
+        <div className="p-6 pt-4 space-y-5 border-t border-gray-100 flex-1 overflow-y-auto">
 
-          {/* Drop zone / preview */}
-          {!file ? (
+          {!slot.file ? (
             <div
               onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
               onDragLeave={() => setIsDragging(false)}
               onDrop={handleDrop}
               onClick={() => fileInputRef.current?.click()}
-              className={`border-2 border-dashed rounded-xl px-6 py-10 text-center cursor-pointer transition-colors ${
+              className={`border-2 border-dashed rounded-xl px-6 h-44 flex flex-col items-center justify-center text-center cursor-pointer transition-colors ${
                 isDragging ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
               }`}
             >
@@ -92,7 +141,7 @@ export default function UploadVideoModal({ isOpen, onClose }) {
                 Drag and drop your video here
               </p>
               <p className="text-xs text-gray-400 mt-1">
-                or <span className="text-blue-600 font-medium">browse</span> from your device · MP4, MOV up to 500MB
+                or <span className="text-blue-600 font-medium">browse</span> from your device · MP4, up to 50MB
               </p>
               <input
                 ref={fileInputRef}
@@ -103,15 +152,10 @@ export default function UploadVideoModal({ isOpen, onClose }) {
               />
             </div>
           ) : (
-            <div className="relative rounded-xl overflow-hidden bg-gray-900 aspect-video">
-              <video src={previewUrl} className="w-full h-full object-contain" controls />
+            <div className="relative rounded-xl overflow-hidden bg-gray-900 h-66">
+              <video src={slot.previewUrl} className="w-full h-full object-contain" controls />
               <button
-                onClick={() => {
-                  if (previewUrl) URL.revokeObjectURL(previewUrl);
-                  setFile(null);
-                  setPreviewUrl(null);
-                  setUploadProgress(null);
-                }}
+                onClick={removeFile}
                 className="absolute top-2 right-2 bg-black/60 hover:bg-black/80 text-white rounded-full w-7 h-7 flex items-center justify-center transition-colors"
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
@@ -122,59 +166,54 @@ export default function UploadVideoModal({ isOpen, onClose }) {
             </div>
           )}
 
-          {/* File info */}
-          {file && (
+          {slot.file && (
             <div className="flex items-center gap-2 text-xs text-gray-500">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
                 <polyline points="14 2 14 8 20 8" />
               </svg>
-              <span className="truncate">{file.name}</span>
+              <span className="truncate">{slot.file.name}</span>
               <span className="text-gray-300">·</span>
-              <span>{(file.size / (1024 * 1024)).toFixed(1)} MB</span>
+              <span>{(slot.file.size / (1024 * 1024)).toFixed(1)} MB</span>
             </div>
           )}
-
-          {/* Upload progress */}
-          {uploadProgress !== null && (
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <span className="text-xs font-medium text-gray-600">
-                  {uploadProgress < 100 ? 'Uploading...' : 'Upload complete'}
-                </span>
-                <span className="text-xs text-gray-400">{uploadProgress}%</span>
-              </div>
-              <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-blue-600 rounded-full transition-all duration-200"
-                  style={{ width: `${uploadProgress}%` }}
-                />
-              </div>
+          <div className="flex gap-2 w-full">
+            <div className="flex-1">
+              <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                Title <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={slot.title}
+                onChange={(e) => updateSlot({ title: e.target.value })}
+                placeholder="Give your video a title"
+                className="w-full px-3.5 py-2.5 text-sm border border-gray-200 rounded-lg outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
+              />
             </div>
-          )}
-
-          {/* Title */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1.5">Title</label>
-            <input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Give your video a title"
-              className="w-full px-3.5 py-2.5 text-sm border border-gray-200 rounded-lg outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
-            />
+            <div className="input-group flex-1">
+              <label className="block text-gray-700 text-sm font-bold mb-2">Visibility</label>
+              <select
+                name='skillLevel'
+                value={slot.visibility}
+                onChange={(e) => updateSlot({ visibility: e.target.value })}
+                className="inp-skill-level w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200">
+                <option key={StringValue.TYPE_VIDEO_PUBLIC} value={StringValue.TYPE_VIDEO_PUBLIC}>{StringValue.TYPE_VIDEO_PUBLIC}</option>
+                <option key={StringValue.TYPE_VIDEO_PRIVATE} value={StringValue.TYPE_VIDEO_PRIVATE}>{StringValue.TYPE_VIDEO_PRIVATE}</option>
+              </select>
+            </div>
           </div>
 
-          {/* Category */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1.5">Category</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                Category <span className="text-red-500">*</span>
+              </label>
             <div className="flex flex-wrap gap-2">
               {CATEGORIES.map((cat) => (
                 <button
                   key={cat}
-                  onClick={() => setCategory(cat)}
+                  onClick={() => updateSlot({ category: cat })}
                   className={`text-xs font-medium px-3.5 py-1.5 rounded-full transition-colors ${
-                    category === cat
+                    slot.category === cat
                       ? 'bg-blue-600 text-white'
                       : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                   }`}
@@ -185,12 +224,11 @@ export default function UploadVideoModal({ isOpen, onClose }) {
             </div>
           </div>
 
-          {/* Description */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-1.5">Description</label>
             <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              value={slot.description}
+              onChange={(e) => updateSlot({ description: e.target.value })}
               rows={3}
               placeholder="Tell viewers about your performance..."
               className="w-full px-3.5 py-2.5 text-sm border border-gray-200 rounded-lg outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors resize-none"
@@ -199,7 +237,6 @@ export default function UploadVideoModal({ isOpen, onClose }) {
 
         </div>
 
-        {/* Footer */}
         <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-100">
           <button
             onClick={resetAndClose}
@@ -209,10 +246,10 @@ export default function UploadVideoModal({ isOpen, onClose }) {
           </button>
           <button
             onClick={handlePublish}
-            disabled={!file || !title || !category}
+            disabled={!canPublish || slot.isUploading}
             className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-200 disabled:cursor-not-allowed text-white text-sm font-semibold px-5 py-2.5 rounded-lg transition-colors"
           >
-            Publish
+            {slot.isUploading ? 'Uploading...' : 'Publish'}
           </button>
         </div>
 

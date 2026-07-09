@@ -28,4 +28,9 @@ export const API = {
     AXIOS_ACHIEVEMENT_GET_ALL:`/users/me/achievements`,
     AXIOS_ACHIEVEMENT_DELETE:`/users/me/achievements/{id}`,
     AXIOS_ACHIEVEMENT_UPDATE:`/users/me/achievements/{id}`,
+
+    AXIOS_VIDEO_UPLOAD:`/users/me/videos`,
+    AXIOS_VIDEO_GET_ALL:`/users/me/videos`,
+    AXIOS_VIDEO_DELETE:`/users/me/videos/{id}`,
+    AXIOS_VIDEO_UPDATE:`/users/me/videos/{id}`
 }
