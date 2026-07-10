@@ -16,8 +16,21 @@ export const API = {
     AXIOS_UPLOAD_IMAGE:`uploads/image`,
     AXIOS_UPLOAD_PROFILE_AVATAR:`/users/me/avatar`,
 
+    AXIOS_SEND_FORGOT_PW :`auth/forgot-password`,
+    AXIOS_RESET_PW:`auth/reset-password`,
+
+    AXIOS_CHANGE_PW:'auth/change-password',
+
+    AXIOS_VERIFY_EMAIL:`auth/verify-email`,
+    AXIOS_RESEND_VERIFY_EMAIL:`auth/resend-verification`,
+
     AXIOS_ACHIEVEMENT_INSERT:`/users/me/achievements`,
     AXIOS_ACHIEVEMENT_GET_ALL:`/users/me/achievements`,
     AXIOS_ACHIEVEMENT_DELETE:`/users/me/achievements/{id}`,
     AXIOS_ACHIEVEMENT_UPDATE:`/users/me/achievements/{id}`,
+
+    AXIOS_VIDEO_UPLOAD:`/users/me/videos`,
+    AXIOS_VIDEO_GET_ALL:`/users/me/videos`,
+    AXIOS_VIDEO_DELETE:`/users/me/videos/{id}`,
+    AXIOS_VIDEO_UPDATE:`/users/me/videos/{id}`
 }

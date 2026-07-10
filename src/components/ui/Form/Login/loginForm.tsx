@@ -11,8 +11,8 @@ export default function LoginForm(){
     const navigate = useNavigate();
 
     const validationSchema = Yup.object({
-            email: Yup.string().email('Email không hợp lệ').required('Bắt buộc nhập'),
-            password: Yup.string().required('Bắt buộc nhập'),
+            email: Yup.string().email('Invalid email').required('This field is required'),
+            password: Yup.string().required('This field is required'),
     });
 
     const formik = useFormik({
@@ -28,28 +28,41 @@ export default function LoginForm(){
             }
             try {
                 const res = await axiosClient.post(API.AXIOS_LOGIN, req);
+                
                 if(res.data.isSuccess){
                     const token = res.data.data.accessToken;
                     localStorage.setItem(StringValue.ACCESS_TOKEN, token);
                     localStorage.setItem(StringValue.USER_INFO, JSON.stringify(res.data.data.user));
                     navigate({ to: '/' });
-                }else{
-                    console.log("check lỗi: ", res.data.message);
-                }
+                }              
                 resetForm();
             
-            } catch (error) {
+            } catch (error : any) {
                 if (error.response) {
-                    const serverData = error.response.data; 
-                    toast.error(serverData.message || "Có lỗi xảy ra");
+                    const statusCode = error.response?.status;
+                    if(statusCode == 403){
+                        navigate({ 
+                            to: '/resend-verification',
+                            search: { email: values.email } 
+                        });
+                    }else{
+                        const message = error.response?.data?.message || 'Something went wrong, please try again.';
+                        toast.error(message);
+                    }
                 } else {
-                    console.log("Lỗi không có response:", error);
+                    console.log("Error with no response:", error);
                 }                       
             } finally {
                 setSubmitting(false);
             }
         },
     });
+
+    const onSendMailForgotPw = async () => {
+        navigate({ to: '/forgot-password' });
+    }
+
+
     return(
         <>
             <div className="bg-white p-8 rounded-lg shadow-md w-full">
@@ -87,7 +100,11 @@ export default function LoginForm(){
                                 <p className="text-red-500 text-xs">{formik.errors.password}</p>
                             )}
                     </div>
-                    
+                    <div className='text-end mb-2'>
+                        <a className='cursor-pointer' onClick={onSendMailForgotPw}>
+                            Forgot password?
+                        </a>
+                    </div>
                     <button  
                         className="w-full bg-blue-500 text-white font-bold py-2 px-4 rounded hover:bg-blue-600 transition duration-300"
                         disabled={formik.isSubmitting}

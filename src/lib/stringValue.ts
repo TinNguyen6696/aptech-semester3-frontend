@@ -9,4 +9,8 @@ export const StringValue = {
     ACHIEVEMENT :`Achievement`,
     AWARD:`Award`,
     CERTIFICATION:`Certification`,
+
+    //Video
+    TYPE_VIDEO_PUBLIC:`Public`,
+    TYPE_VIDEO_PRIVATE:`Private`,
 } as const;
