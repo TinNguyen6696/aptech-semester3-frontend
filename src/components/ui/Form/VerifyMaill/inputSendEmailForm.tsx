@@ -1,6 +1,7 @@
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { useState, useEffect, useRef } from 'react';
+import axios from 'axios';
 import { API } from '@/lib/apiendpoint';
 import axiosClient from '@/services/axiosClient';
 import { useNavigate } from "@tanstack/react-router";
@@ -31,8 +32,8 @@ function computeRemainingSeconds() {
 
 export default function InputSendEmailForm() {
     const navigate = useNavigate();
-    const [remainingSeconds, setRemainingSeconds] = useState(0);
-    const intervalRef = useRef(null);
+    const [remainingSeconds, setRemainingSeconds] = useState(() => computeRemainingSeconds());
+    const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
     const startCountdown = () => {
         if (intervalRef.current) clearInterval(intervalRef.current);
@@ -40,7 +41,7 @@ export default function InputSendEmailForm() {
             const remaining = computeRemainingSeconds();
             setRemainingSeconds(remaining);
             if (remaining <= 0) {
-                clearInterval(intervalRef.current);
+                if (intervalRef.current) clearInterval(intervalRef.current);
                 clearCooldown();
             }
         }, 1000);
@@ -48,9 +49,7 @@ export default function InputSendEmailForm() {
 
     // Khi mount (kể cả sau F5), check xem còn cooldown không
     useEffect(() => {
-        const remaining = computeRemainingSeconds();
-        if (remaining > 0) {
-            setRemainingSeconds(remaining);
+        if (computeRemainingSeconds() > 0) {
             startCountdown();
         }
         return () => {
@@ -69,7 +68,7 @@ export default function InputSendEmailForm() {
         validationSchema: validationSchema,
         onSubmit: async (values, { setSubmitting, resetForm }) => {
             const req_mail = {
-                Email: formik.values.email
+                Email: values.email
             };
             try {
                 const res = await axiosClient.post(API.AXIOS_SEND_FORGOT_PW, req_mail);
@@ -84,8 +83,8 @@ export default function InputSendEmailForm() {
                 } else {
                     toast.error(res.data.message || 'Something went wrong, please try again.');
                 }
-            } catch (error: any) {
-                if (error.response) {
+            } catch (error: unknown) {
+                if (axios.isAxiosError(error) && error.response) {
                     const message = error.response?.data?.message || 'Something went wrong, please try again.';
                     toast.error(message);
                 } else {
