@@ -1,5 +1,6 @@
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
+import axios from 'axios';
 import { API } from '@/lib/apiendpoint';
 import axiosClient from '@/services/axiosClient';
 import { useNavigate } from "@tanstack/react-router";
@@ -49,8 +50,8 @@ export default function ResetPasswordForm({ token }: ResetPasswordFormProps){
                 } else {
                     toast.error(res.data.message || 'An error occurred');
                 }
-            } catch (error: any) {
-                if (error.response) {
+            } catch (error: unknown) {
+                if (axios.isAxiosError(error) && error.response) {
                     toast.error(error.response.data?.message || 'Invalid or expired token');
                 } else {
                     toast.error('Unable to connect to the server');

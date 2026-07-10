@@ -1,6 +1,6 @@
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
-import axios from 'axios'
+import axios from 'axios';
 import { API } from '@/lib/apiendpoint';
 import axiosClient from '@/services/axiosClient';
 import { useNavigate } from "@tanstack/react-router";
@@ -21,7 +21,7 @@ export default function LoginForm(){
         password: ''
         },
         validationSchema: validationSchema,
-        onSubmit: async (values, { setSubmitting, resetForm, setErrors }) => {
+        onSubmit: async (values, { setSubmitting, resetForm }) => {
             const req = {
                 Email:values.email,
                 Password:values.password
@@ -37,8 +37,8 @@ export default function LoginForm(){
                 }              
                 resetForm();
             
-            } catch (error : any) {
-                if (error.response) {
+            } catch (error: unknown) {
+                if (axios.isAxiosError(error) && error.response) {
                     const statusCode = error.response?.status;
                     if(statusCode == 403){
                         navigate({ 
@@ -101,7 +101,7 @@ export default function LoginForm(){
                             )}
                     </div>
                     <div className='text-end mb-2'>
-                        <a className='cursor-pointer' onClick={onSendMailForgotPw}>
+                        <a className='cursor-pointer text-xs text-blue-600 hover:text-blue-700 hover:underline' onClick={onSendMailForgotPw}>
                             Forgot password?
                         </a>
                     </div>
