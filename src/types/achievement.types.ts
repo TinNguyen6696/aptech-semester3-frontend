@@ -27,4 +27,5 @@ export interface AchievementFormValues {
     issuedDate: string;
     description: string;
     certUrl: string;
+    certificateImage:File | null;
 }

@@ -167,21 +167,31 @@ export default function Achievements() {
             issuedDate: editTarget?.issuedDate ? editTarget.issuedDate.slice(0, 10) : "",
             description: editTarget?.description ?? "",
             certUrl: editTarget?.certUrl ?? "",
+            certificateImage: null,
         },
         validationSchema: achievementSchema,
         onSubmit: async (values) => {
-            const req = {
-                Type:values.type || "",
-                Title:values.title || "",
-                Issuer:values.issuer || "",
-                IssuedDate:values.issuedDate ? new Date(values.issuedDate).toISOString(): null,
-                CertificateUrl:values.certUrl || "",
-                Description:values.description || ""
-            };
+            const formData = new FormData();
+            formData.append("Type", values.type || "");
+            formData.append("Title", values.title || "");
+            if (values.issuer) formData.append("Issuer", values.issuer);
+            if (values.issuedDate) {
+                formData.append("IssuedDate", new Date(values.issuedDate).toISOString());
+            }
+            if (values.description) formData.append("Description", values.description);
+
+            if (values.certificateImage) {
+                formData.append("CertificateImage", values.certificateImage);
+            }
+
+            console.log("check formData:");
+            for (const pair of formData.entries()) {
+                console.log(pair[0], pair[1]);
+            }   
             try {
                 const res = editTarget
-                ? await axiosClient.put(API.AXIOS_ACHIEVEMENT_UPDATE.replace("{id}", editTarget.id), req)
-                : await axiosClient.post(API.AXIOS_ACHIEVEMENT_INSERT, req);
+                ? await axiosClient.put(API.AXIOS_ACHIEVEMENT_UPDATE.replace("{id}", editTarget.id), formData)
+                : await axiosClient.post(API.AXIOS_ACHIEVEMENT_INSERT, formData);
 
                 if(res.data.isSuccess){
                     toast.success(res.data.message);
@@ -239,7 +249,20 @@ export default function Achievements() {
         }
     };
 
+    const certificatePreviewUrl = useMemo(() => {
+        if (formik.values.certificateImage) {
+            return URL.createObjectURL(formik.values.certificateImage);
+        }
+        return null;
+    }, [formik.values.certificateImage]);
 
+    useEffect(() => {
+        return () => {
+            if (certificatePreviewUrl) {
+                URL.revokeObjectURL(certificatePreviewUrl);
+            }
+        };
+    }, [certificatePreviewUrl]);
     
     return (
         <div className="max-w-3xl mx-auto mb-5 bg-white rounded-2xl border border-gray-100 shadow-sm px-6 sm:px-10 py-10">
@@ -436,6 +459,52 @@ export default function Achievements() {
                                     )}
                                     <p className="text-xs text-gray-400 mt-1.5 text-right">{formik.values.description.length}/300</p>
                                 </div>  
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Certificate image (optional)</label>
+
+                                {formik.values.certificateImage ? (
+                                    <div className="relative rounded-lg border border-gray-200 overflow-hidden">
+                                        <img
+                                            src={certificatePreviewUrl}
+                                            alt="Certificate preview"
+                                            className="w-full h-40 object-cover"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => formik.setFieldValue("certificateImage", null)}
+                                            className="cursor-pointer absolute top-2 right-2 bg-black/60 hover:bg-black/75 text-white rounded-full w-7 h-7 flex items-center justify-center transition-colors"
+                                            aria-label="Remove image"
+                                        >
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                <path d="M18 6 6 18M6 6l12 12" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <label className="flex flex-col items-center justify-center gap-1.5 border border-dashed border-gray-300 rounded-lg py-6 cursor-pointer hover:bg-gray-50 transition-colors">
+                                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                            <path d="M17 8l-5-5-5 5" />
+                                            <path d="M12 3v12" />
+                                        </svg>
+                                        <span className="text-xs text-gray-500 font-medium">Click to upload an image</span>
+                                        <span className="text-[11px] text-gray-400">PNG, JPG up to 5MB</span>
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            className="hidden"
+                                            onChange={(e) => {
+                                                const file = e.target.files?.[0];
+                                                if (file) {
+                                                    formik.setFieldValue("certificateImage", file);
+                                                }
+                                                e.target.value = "";
+                                            }}
+                                        />
+                                    </label>
+                                )}
                             </div>
 
                             <div>

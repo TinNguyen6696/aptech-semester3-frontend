@@ -8,10 +8,14 @@ export const API = {
     PROVINCE_GET_ALL :`${URL_API}/provinces`,
     OPTION_GET_ALL:`${URL_API}/options`,
     REGISTER: `${URL_API_AUTH}/register`,
-    
+    VIDEOS_GET_ALL_PUBLIC:`${URL_API}/videos`,
+    VIDEO_GET_BY_ID:`${URL_API}/videos/{id}`,
+
     /* axios client */
     AXIOS_REGISTER:`auth/register`,
     AXIOS_LOGIN:`auth/login`,
+    AXIOS_REFRESH_TOKEN:`/auth/refresh`,
+    
     AXIOS_UPDATE_PROFILE:`/users/me`,
     AXIOS_UPLOAD_IMAGE:`uploads/image`,
     AXIOS_UPLOAD_PROFILE_AVATAR:`/users/me/avatar`,

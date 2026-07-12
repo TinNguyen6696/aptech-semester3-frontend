@@ -28,10 +28,11 @@ export default function LoginForm(){
             }
             try {
                 const res = await axiosClient.post(API.AXIOS_LOGIN, req);
-                
                 if(res.data.isSuccess){
                     const token = res.data.data.accessToken;
+                    const refreshToken = res.data.data.refreshToken;
                     localStorage.setItem(StringValue.ACCESS_TOKEN, token);
+                    localStorage.setItem(StringValue.REFRESH_TOKEN, refreshToken);
                     localStorage.setItem(StringValue.USER_INFO, JSON.stringify(res.data.data.user));
                     navigate({ to: '/' });
                 }              
@@ -101,7 +102,7 @@ export default function LoginForm(){
                             )}
                     </div>
                     <div className='text-end mb-2'>
-                        <a className='cursor-pointer text-xs text-blue-600 hover:text-blue-700 hover:underline' onClick={onSendMailForgotPw}>
+                        <a className='cursor-pointer text-sm text-blue-600 hover:text-blue-700' onClick={onSendMailForgotPw}>
                             Forgot password?
                         </a>
                     </div>

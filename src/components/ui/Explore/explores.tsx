@@ -1,6 +1,42 @@
+import { API } from "@/lib/apiendpoint";
+import axios from "axios";
+import { useState, useEffect } from "react";
+import { usePublicVideos } from "@/hook/usePublicVideo";
+import VideoScrollTrigger from "@/components/Trigger/videoScrollTrigger";
+import PublicVideoCard from "@/components/VideoComponent/publicVideoCard";
+
+
+const CATEGORY_CONFIG = {
+    Singer: { emoji: "🎤" },
+    Dancer: { emoji: "💃" },
+    Artist: { emoji: "🎨" },
+    Designer: { emoji: "🖌️" },
+    Coder: { emoji: "💻" },
+    Photographer: { emoji: "📷" },
+};
+
 
 
 export default function Explores(){
+    const [options, setOptions] = useState([]);
+    const [selectedCategory, setSelectedCategory] = useState("All");
+    const { videos, isLoading, hasMore, loadMore } = usePublicVideos(selectedCategory);
+
+    useEffect(() => {
+      const fetchOptions = async () => {
+        try {
+          const response = await axios.get(API.OPTION_GET_ALL)
+          setOptions(response.data.data)
+        } catch (error) {
+          console.error("Error fetching options:", error)
+        }
+      }
+
+      fetchOptions()
+    }, [])  
+
+    console.log("check options: ", options)
+
     return (
         <>
             <section className="relative bg-gradient-to-b from-slate-50 to-white px-6 py-24 text-center">
@@ -49,7 +85,6 @@ export default function Explores(){
                         </button>
                     </div> */}
 
-                    {/* Popular tags */}
                     <div className="mt-5 flex flex-wrap items-center justify-center gap-2 text-sm">
                     <span className="text-gray-400 mr-1">Popular:</span>
                     {["Beatboxing", "Spoken word", "Pixel art", "Standup"].map((tag) => (
@@ -62,11 +97,10 @@ export default function Explores(){
                     ))}
                     </div>
 
-                    {/* Stats */}
                     <div className="mt-14 grid grid-cols-2 sm:grid-cols-4 gap-8 max-w-2xl mx-auto">
                     {[
                         { value: "50K+", label: "Creators" },
-                        { value: "12", label: "Categories" },
+                        { value: options.talentCategories?.length.toString() ?? "0", label: "Categories" },
                         { value: "800+", label: "Mentors & scouts" },
                         { value: "2.4M", label: "Feedback given" },
                     ].map((stat) => (
@@ -82,202 +116,66 @@ export default function Explores(){
             
             <div className="border-b border-gray-100 px-6 sm:px-10 py-4">
                 <div className="max-w-7xl mx-auto flex items-center justify-center gap-2 overflow-x-auto scrollbar-hide">
-                    <button className="shrink-0 bg-blue-600 text-white text-sm font-semibold px-4 py-2 rounded-full">
+                    <button
+                        onClick={() => setSelectedCategory("All")}
+                        className={`shrink-0 text-sm cursor-pointer font-semibold px-4 py-2 rounded-full transition-colors ${
+                            selectedCategory === "All"
+                                ? "bg-blue-600 text-white"
+                                : "bg-gray-100 hover:bg-gray-200 text-gray-700"
+                        }`}
+                    >
                         All
                     </button>
-                    <button className="shrink-0 flex items-center gap-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium px-4 py-2 rounded-full transition-colors">
-                        🎵 Music
-                    </button>
-                    <button className="shrink-0 flex items-center gap-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium px-4 py-2 rounded-full transition-colors">
-                        💃 Dance
-                    </button>
-                    <button className="shrink-0 flex items-center gap-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium px-4 py-2 rounded-full transition-colors">
-                        🎨 Art
-                    </button>
-                    <button className="shrink-0 flex items-center gap-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium px-4 py-2 rounded-full transition-colors">
-                        💻 Coding
-                    </button>
-                    <button className="shrink-0 flex items-center gap-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium px-4 py-2 rounded-full transition-colors">
-                        🎭 Acting
-                    </button>
-                    <button className="shrink-0 flex items-center gap-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium px-4 py-2 rounded-full transition-colors">
-                        😂 Comedy
-                    </button>
-                    <button className="shrink-0 flex items-center gap-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium px-4 py-2 rounded-full transition-colors">
-                        ✍️ Writing
-                    </button>
-                    <button className="shrink-0 flex items-center gap-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium px-4 py-2 rounded-full transition-colors">
-                        📷 Photo
-                    </button>
+                    {options.talentCategories?.map((cate) => {
+                        const config = CATEGORY_CONFIG[cate] ?? { emoji: "🔖" };
+                        const isSelected = selectedCategory === cate;
+                        return (
+                            <button
+                                key={cate}
+                                onClick={() => setSelectedCategory(cate)}
+                                className={`shrink-0 flex cursor-pointer items-center gap-1.5 text-sm font-medium px-4 py-2 rounded-full transition-colors ${
+                                    isSelected
+                                        ? "bg-blue-600 text-white"
+                                        : "bg-gray-100 hover:bg-gray-200 text-gray-700"
+                                }`}
+                            >
+                                {config.emoji} {cate}
+                            </button>
+                        );
+                    })}
+
                 </div>
             </div>
           
             <section className="px-6 sm:px-10 py-10">
                 <div className="max-w-7xl mx-auto">
-
-                <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-2xl font-bold text-gray-900">Trending this week</h2>
-
-                    <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-full">
-                    <button className="bg-white text-gray-900 text-sm font-semibold px-4 py-1.5 rounded-full shadow-sm">
-                        Most liked
-                    </button>
-                    <button className="text-gray-500 hover:text-gray-700 text-sm font-medium px-4 py-1.5 rounded-full transition-colors">
-                        Newest
-                    </button>
-                    <button className="text-gray-500 hover:text-gray-700 text-sm font-medium px-4 py-1.5 rounded-full transition-colors">
-                        Rising
-                    </button>
+                    <div className="flex items-center justify-between mb-6">
+                        <h2 className="text-2xl font-bold text-gray-900">
+                            {selectedCategory === "All" ? "Trending this week" : `${selectedCategory} videos`}
+                        </h2>
                     </div>
-                </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-
-                    <div className="group cursor-pointer">
-                    <div className="relative aspect-[16/10] rounded-xl overflow-hidden bg-gradient-to-br from-purple-500 to-violet-700">
-                        <span className="absolute top-3 left-3 bg-black/30 text-white text-[10px] font-bold tracking-wide px-2.5 py-1 rounded-full backdrop-blur-sm">
-                        MUSIC
-                        </span>
-                        <button className="absolute inset-0 flex items-center justify-center">
-                        <span className="w-14 h-14 rounded-full bg-white flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="#111827"><path d="M8 5v14l11-7z"/></svg>
-                        </span>
-                        </button>
-                        <span className="absolute bottom-3 right-3 bg-black/60 text-white text-xs font-medium px-2 py-1 rounded-md">
-                        2:18
-                        </span>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {videos.map((video) => (
+                            <PublicVideoCard key={video.id} video={video} />
+                        ))}
                     </div>
-                    <h3 className="mt-3 text-[15px] font-semibold text-gray-900">Fingerstyle cover — first attempt</h3>
-                    <div className="mt-2 flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                        <span className="w-6 h-6 rounded-full bg-purple-500 flex items-center justify-center text-[10px] font-bold text-white">EL</span>
-                        <span className="text-sm text-gray-500">Elena R.</span>
+
+                    {isLoading && (
+                        <div className="flex justify-center py-8">
+                            <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
                         </div>
-                        <span className="text-xs text-gray-400">94K · ♥ 8.1K</span>
-                    </div>
-                    </div>
+                    )}
 
-                    <div className="group cursor-pointer">
-                    <div className="relative aspect-[16/10] rounded-xl overflow-hidden bg-gradient-to-br from-orange-400 to-red-500">
-                        <span className="absolute top-3 left-3 bg-black/30 text-white text-[10px] font-bold tracking-wide px-2.5 py-1 rounded-full backdrop-blur-sm">
-                        DANCE
-                        </span>
-                        <button className="absolute inset-0 flex items-center justify-center">
-                        <span className="w-14 h-14 rounded-full bg-white flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="#111827"><path d="M8 5v14l11-7z"/></svg>
-                        </span>
-                        </button>
-                        <span className="absolute bottom-3 right-3 bg-black/60 text-white text-xs font-medium px-2 py-1 rounded-md">
-                        1:05
-                        </span>
-                    </div>
-                    <h3 className="mt-3 text-[15px] font-semibold text-gray-900">Rooftop freestyle at golden hour</h3>
-                    <div className="mt-2 flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                        <span className="w-6 h-6 rounded-full bg-orange-500 flex items-center justify-center text-[10px] font-bold text-white">DK</span>
-                        <span className="text-sm text-gray-500">D. Kapoor</span>
-                        </div>
-                        <span className="text-xs text-gray-400">210K · ♥ 19K</span>
-                    </div>
-                    </div>
+                    <VideoScrollTrigger onIntersect={loadMore} disabled={!hasMore || isLoading} />
 
-                    <div className="group cursor-pointer">
-                    <div className="relative aspect-[16/10] rounded-xl overflow-hidden bg-gradient-to-br from-blue-500 to-indigo-700">
-                        <span className="absolute top-3 left-3 bg-black/30 text-white text-[10px] font-bold tracking-wide px-2.5 py-1 rounded-full backdrop-blur-sm">
-                        CODING
-                        </span>
-                        <button className="absolute inset-0 flex items-center justify-center">
-                        <span className="w-14 h-14 rounded-full bg-white flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="#111827"><path d="M8 5v14l11-7z"/></svg>
-                        </span>
-                        </button>
-                        <span className="absolute bottom-3 right-3 bg-black/60 text-white text-xs font-medium px-2 py-1 rounded-md">
-                        4:30
-                        </span>
-                    </div>
-                    <h3 className="mt-3 text-[15px] font-semibold text-gray-900">A synth in 60 lines of JavaScript</h3>
-                    <div className="mt-2 flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                        <span className="w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center text-[10px] font-bold text-white">ST</span>
-                        <span className="text-sm text-gray-500">S. Tan</span>
-                        </div>
-                        <span className="text-xs text-gray-400">76K · ♥ 6.4K</span>
-                    </div>
-                    </div>
+                    {!hasMore && videos.length > 0 && (
+                        <p className="text-center text-sm text-gray-400 py-8">You've reached the end of the list</p>
+                    )}
 
-                    <div className="group cursor-pointer">
-                    <div className="relative aspect-[16/10] rounded-xl overflow-hidden bg-gradient-to-br from-emerald-500 to-green-700">
-                        <span className="absolute top-3 left-3 bg-black/30 text-white text-[10px] font-bold tracking-wide px-2.5 py-1 rounded-full backdrop-blur-sm">
-                        ART
-                        </span>
-                        <button className="absolute inset-0 flex items-center justify-center">
-                        <span className="w-14 h-14 rounded-full bg-white flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="#111827"><path d="M8 5v14l11-7z"/></svg>
-                        </span>
-                        </button>
-                        <span className="absolute bottom-3 right-3 bg-black/60 text-white text-xs font-medium px-2 py-1 rounded-md">
-                        3:12
-                        </span>
-                    </div>
-                    <h3 className="mt-3 text-[15px] font-semibold text-gray-900">Watercolor sketch, timelapse</h3>
-                    <div className="mt-2 flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                        <span className="w-6 h-6 rounded-full bg-emerald-600 flex items-center justify-center text-[10px] font-bold text-white">MJ</span>
-                        <span className="text-sm text-gray-500">M. Johnson</span>
-                        </div>
-                        <span className="text-xs text-gray-400">58K · ♥ 5.2K</span>
-                    </div>
-                    </div>
-
-                    <div className="group cursor-pointer">
-                    <div className="relative aspect-[16/10] rounded-xl overflow-hidden bg-gradient-to-br from-amber-400 to-yellow-600">
-                        <span className="absolute top-3 left-3 bg-black/30 text-white text-[10px] font-bold tracking-wide px-2.5 py-1 rounded-full backdrop-blur-sm">
-                        COMEDY
-                        </span>
-                        <button className="absolute inset-0 flex items-center justify-center">
-                        <span className="w-14 h-14 rounded-full bg-white flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="#111827"><path d="M8 5v14l11-7z"/></svg>
-                        </span>
-                        </button>
-                        <span className="absolute bottom-3 right-3 bg-black/60 text-white text-xs font-medium px-2 py-1 rounded-md">
-                        5:47
-                        </span>
-                    </div>
-                    <h3 className="mt-3 text-[15px] font-semibold text-gray-900">Open mic night — five minute set</h3>
-                    <div className="mt-2 flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                        <span className="w-6 h-6 rounded-full bg-amber-600 flex items-center justify-center text-[10px] font-bold text-white">OK</span>
-                        <span className="text-sm text-gray-500">O. Kim</span>
-                        </div>
-                        <span className="text-xs text-gray-400">142K · ♥ 11K</span>
-                    </div>
-                    </div>
-
-                    <div className="group cursor-pointer">
-                    <div className="relative aspect-[16/10] rounded-xl overflow-hidden bg-gradient-to-br from-cyan-500 to-teal-700">
-                        <span className="absolute top-3 left-3 bg-black/30 text-white text-[10px] font-bold tracking-wide px-2.5 py-1 rounded-full backdrop-blur-sm">
-                        PHOTO
-                        </span>
-                        <button className="absolute inset-0 flex items-center justify-center">
-                        <span className="w-14 h-14 rounded-full bg-white flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="#111827"><path d="M8 5v14l11-7z"/></svg>
-                        </span>
-                        </button>
-                        <span className="absolute bottom-3 right-3 bg-black/60 text-white text-xs font-medium px-2 py-1 rounded-md">
-                        0:52
-                        </span>
-                    </div>
-                    <h3 className="mt-3 text-[15px] font-semibold text-gray-900">Golden hour street photography</h3>
-                    <div className="mt-2 flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                        <span className="w-6 h-6 rounded-full bg-cyan-600 flex items-center justify-center text-[10px] font-bold text-white">NA</span>
-                        <span className="text-sm text-gray-500">N. Alvarez</span>
-                        </div>
-                        <span className="text-xs text-gray-400">33K · ♥ 2.9K</span>
-                    </div>
-                    </div>
-
-                </div>
+                    {!isLoading && videos.length === 0 && (
+                        <p className="text-center text-sm text-gray-400 py-8">No videos found</p>
+                    )}
                 </div>
             </section>
 
