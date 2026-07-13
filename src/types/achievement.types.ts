@@ -16,7 +16,8 @@ export interface Achievement {
     issuer: string;
     issuedDate: string;
     description: string;
-    certUrl?: string;
+    externalUrl?: string;
+    certificateUrl?: string;
     hasCertificate?: boolean;
 }
 
@@ -26,6 +27,6 @@ export interface AchievementFormValues {
     issuer: string;
     issuedDate: string;
     description: string;
-    certUrl: string;
+    externalUrl: string;
     certificateImage:File | null;
 }
