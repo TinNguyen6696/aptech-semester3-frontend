@@ -188,10 +188,6 @@ export default function Achievements() {
                 formData.append("CertificateImage", values.certificateImage);
             }
 
-            console.log("check formData:");
-            for (const pair of formData.entries()) {
-                console.log(pair[0], pair[1]);
-            }   
             try {
                 const res = editTarget
                 ? await axiosClient.put(API.AXIOS_ACHIEVEMENT_UPDATE.replace("{id}", editTarget.id), formData)
@@ -212,9 +208,6 @@ export default function Achievements() {
                 } else {
                     console.log("No response received:", error);
                 }
-            } finally {
-                // setIsModalOpen(false);
-                // formik.resetForm();
             }
         },
     });
@@ -409,7 +402,7 @@ export default function Achievements() {
                 >
                     <div className="bg-white rounded-2xl w-full max-w-md max-h-[90vh] overflow-y-auto p-6 shadow-xl">
                         <div className="flex items-start justify-between mb-1">
-                            <h3 className="text-base font-bold text-gray-900">Add achievement</h3>
+                            <h3 className="text-base font-bold text-gray-900">{editTarget ? "Edit achievement" : "Add achievement"}</h3>
                             <button
                                 onClick={closeModal}
                                 className="cursor-pointer text-gray-400 hover:text-gray-600 transition-colors"
@@ -421,7 +414,9 @@ export default function Achievements() {
                             </button>
                         </div>
                         <p className="text-sm text-gray-500 mb-5">
-                            Add a contest win, certification, award or other achievement.
+                            {editTarget
+                                ? "Update the details of your achievement."
+                                : "Add a contest win, certification, award or other achievement."}
                         </p>
 
                         <form onSubmit={formik.handleSubmit} className="space-y-4">
@@ -516,7 +511,7 @@ export default function Achievements() {
                                     {formik.touched.description && formik.errors.description && (
                                         <p className="text-red-500 text-xs">{formik.errors.description}</p>
                                     )}
-                                    <p className="text-xs text-gray-400 mt-1.5 text-right">{formik.values.description.length}/300</p>
+                                    <p className="text-xs text-gray-400 mt-1.5 text-right">{formik.values.description.length}/200</p>
                                 </div>  
                             </div>
 
