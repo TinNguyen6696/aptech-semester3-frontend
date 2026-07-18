@@ -13,4 +13,11 @@ export const StringValue = {
     //Video
     TYPE_VIDEO_PUBLIC:`Public`,
     TYPE_VIDEO_PRIVATE:`Private`,
+
+    //Role
+    ADMIN:`Admin`,
+    MEMBER:`Member`,
+    MENTOR:`Mentor`,
+    RECRUITER:`Recruiter`,
+
 } as const;

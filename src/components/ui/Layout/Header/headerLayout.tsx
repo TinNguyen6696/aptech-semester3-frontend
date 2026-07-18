@@ -6,7 +6,6 @@ import { API } from '@/lib/apiendpoint';
 import { useUserStore } from '@/Store/userStore';
  
 const NAV_ITEMS = [
-    { label: 'Stories', href: '/stories' },
     { label: 'Explores', href: '/explores' },
     { label: 'Contests', href: '/contests' },
     { label: 'Mentors', href: '/mentors' },
@@ -154,7 +153,6 @@ export default function HeaderLayout(){
                 {isMenuOpen && (
                     <div id="mobileMenu" className="md:hidden border-t border-gray-100 px-4 py-3">
                         <ul className="flex flex-col gap-3">
-                            <li><a href="/Stories" className="block text-sm font-medium text-blue-600">Stories</a></li>
                             <li><a href="/explores" className="block text-sm font-medium text-gray-600">Explores</a></li>
                             <li><a href="/contests" className="block text-sm font-medium text-gray-600">Contests</a></li>
                             <li><a href="/mentors" className="block text-sm font-medium text-gray-600">Mentors</a></li>

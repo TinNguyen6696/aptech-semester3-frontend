@@ -182,12 +182,12 @@ export default function Achievements() {
                 formData.append("IssuedDate", new Date(values.issuedDate).toISOString());
             }
             if (values.description) formData.append("Description", values.description);
-            if (values.externalUrl) formData.append("ExternalUrl", values.externalUrl);
+            if (values.externalUrl) formData.append("ExternalUrl", values.externalUrl ?? "");
 
             if (values.certificateImage) {
                 formData.append("CertificateImage", values.certificateImage);
             }
-
+            
             try {
                 const res = editTarget
                 ? await axiosClient.put(API.AXIOS_ACHIEVEMENT_UPDATE.replace("{id}", editTarget.id), formData)

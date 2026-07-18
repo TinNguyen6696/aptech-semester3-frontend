@@ -23,4 +23,13 @@ export default class DateUtil{
         if (diffDay < 7) return `${diffDay} day${diffDay > 1 ? 's' : ''} ago`;
         return new Date(dateStr).toLocaleDateString();
     };
+
+    static toValidDate(createdAt) {
+        if (!createdAt) return null;
+        const hasTz = /Z$|[+-]\d{2}:?\d{2}$/.test(createdAt);
+        const normalized = hasTz ? createdAt : createdAt + "Z";
+        const d = new Date(normalized);
+        return isNaN(d.getTime()) ? null : d;
+    }
+    static formatDate = (isoDate) => new Date(isoDate).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }

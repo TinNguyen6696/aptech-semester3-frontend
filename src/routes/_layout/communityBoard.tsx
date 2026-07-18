@@ -1,7 +1,7 @@
-import CommunityDetail from '@/components/ui/Communities/communityDetail';
+import CommunityBoard from '@/components/ui/Communities/communityBoard'
 import { createFileRoute } from '@tanstack/react-router'
 
-export const Route = createFileRoute('/_layout/communityDetail')({
+export const Route = createFileRoute('/_layout/communityBoard')({
   validateSearch: (search: Record<string, unknown>) => ({
     id: (search.id as string) || '',
   }),
@@ -10,10 +10,9 @@ export const Route = createFileRoute('/_layout/communityDetail')({
 
 function RouteComponent() {
   const { id } = Route.useSearch();
-
   return (
     <>
-      <CommunityDetail id={id} />
+      <CommunityBoard id={id}/>
     </>
   )
 }

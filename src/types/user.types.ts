@@ -1,3 +1,5 @@
+export type UserRole = "Member" | "Mentor" | "Recruiter" | "Admin";
+
 export interface UserInfo {
     firstName: string;
     lastName: string;
@@ -10,7 +12,7 @@ export interface UserInfo {
     provinceName: string;
     primaryCategory: string;
     skillLevel: string;
-    role: string;
+    role: UserRole;
 }
 
 export interface UserStore {
