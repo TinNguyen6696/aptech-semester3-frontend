@@ -39,7 +39,7 @@ export default function HeaderLayout(){
     const visibleNavItems = NAV_ITEMS.filter((item) => item.roles.includes(currentRole));
     const previewUrl = userInfo?.profileImageUrl
         ? `${API.URL}/${userInfo.profileImageUrl}`
-        : null;
+        : `${API.URL}/${StringValue.USER_AVATAR_DEFAULT}`;
      
     useEffect(() => {
         function handleClickOutside(event) {
@@ -180,6 +180,11 @@ export default function HeaderLayout(){
                                                 <p className="text-xs text-gray-400 truncate">{userInfo.email}</p>
                                             )}
                                         </div>
+                                        {currentRole === StringValue.ADMIN &&(
+                                            <a href="/admin" className="block px-3.5 py-2 text-sm text-gray-600 hover:bg-gray-50">
+                                                Admin Dashboard
+                                            </a> 
+                                        )}
                                         <a href="/profile" className="block px-3.5 py-2 text-sm text-gray-600 hover:bg-gray-50">
                                             Profile
                                         </a>
@@ -258,7 +263,11 @@ export default function HeaderLayout(){
 
                             {userInfo && (
                                 <div className="flex flex-col gap-2 mt-3">
+                                    {currentRole === StringValue.ADMIN &&(
+                                        <a href="/admin" className="text-sm text-gray-600">Admin Dashboard</a>
+                                    )}
                                     <a href="/profile" className="text-sm text-gray-600">Profile</a>
+                                    <a href="/messages" className="text-sm text-gray-600">Messages</a>
                                     <button
                                         onClick={handleLogout}
                                         className="text-left text-sm text-red-500"
