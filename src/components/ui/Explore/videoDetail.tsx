@@ -20,6 +20,9 @@ export default function VideoDetail({ id }) {
     const videoRef = useRef(null);
     const [hasCountedView, setHasCountedView] = useState(false);
     const [viewCount, setViewCount] = useState(0);
+    const [isReportOpen, setIsReportOpen] = useState(false);
+    const [reportText, setReportText] = useState("");
+    const [isReporting, setIsReporting] = useState(false);
 
     useEffect(() => {
         if (video) {
@@ -128,7 +131,7 @@ export default function VideoDetail({ id }) {
         }
     };
 
-    // ─── Keyboard submit ──────────────────────────────────────────────────────
+    //Keyboard
     const handleKeyDown = (e) => {
         if (e.key === "Enter" && !e.shiftKey) {
             e.preventDefault();
@@ -136,7 +139,30 @@ export default function VideoDetail({ id }) {
         }
     };
 
-    // ─── Render ───────────────────────────────────────────────────────────────
+    //Report 
+    const handleSubmitReport = async () => {
+        if (!reportText.trim()) return;
+        setIsReporting(true);
+        try {
+            const res = await axiosClient.post(
+                API.AXIOS_VIDEO_REPORT_INSERT.replace("{id}", id),
+                { Description: reportText.trim() }
+            );
+            if (res.data.isSuccess) {
+                toast.success("Report submitted");
+                setIsReportOpen(false);
+                setReportText("");
+            } else {
+                toast.error(res.data.message);
+            }
+        } catch {
+            toast.error("Unable to submit report");
+        } finally {
+            setIsReporting(false);
+        }
+    };
+
+    
     if (isLoading) {
         return (
             <div className="flex justify-center py-20">
@@ -208,6 +234,27 @@ export default function VideoDetail({ id }) {
                                     <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
                                 </svg>
                                 {likeCount}
+                            </button>
+
+                            <button
+                                onClick={() => setIsReportOpen(true)}
+                                className="flex items-center gap-1.5 px-3.5 py-2 rounded-full text-sm font-semibold bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-700 transition-colors cursor-pointer"
+                                title="Report video"
+                            >
+                                <svg
+                                    width="16"
+                                    height="16"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                >
+                                    <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
+                                    <line x1="4" y1="22" x2="4" y2="15" />
+                                </svg>
+                                Report
                             </button>
 
                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">
@@ -326,6 +373,56 @@ export default function VideoDetail({ id }) {
                     />
                 </div>
             </div>
+
+             {isReportOpen && (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+                    onClick={() => setIsReportOpen(false)}
+                >
+                    <div
+                        className="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 p-6"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="flex items-center justify-between mb-4">
+                            <h2 className="text-base font-bold text-gray-900">Report video</h2>
+                            <button
+                                onClick={() => setIsReportOpen(false)}
+                                className="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
+                            >
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                                </svg>
+                            </button>
+                        </div>
+                        <p className="text-sm text-gray-500 mb-3">
+                            Tell us why you're reporting this video.
+                        </p>
+                        <textarea
+                            value={reportText}
+                            onChange={(e) => setReportText(e.target.value)}
+                            placeholder="Describe the issue..."
+                            rows={4}
+                            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500 resize-none"
+                        />
+                        <div className="flex justify-end gap-2 mt-4">
+                            <button
+                                onClick={() => setIsReportOpen(false)}
+                                className="px-4 py-2 rounded-lg text-sm font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors cursor-pointer"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleSubmitReport}
+                                disabled={isReporting || !reportText.trim()}
+                                className="px-4 py-2 rounded-lg text-sm font-semibold text-white bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                            >
+                                {isReporting ? "Submitting..." : "Submit report"}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}       
+
         </div>
     );
 }

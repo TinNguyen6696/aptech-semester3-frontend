@@ -1,3 +1,4 @@
+
 const URL = `http://localhost:5208`;
 const URL_API = `${URL}/api`;
 const URL_API_AUTH = `${URL_API}/auth`;
@@ -52,7 +53,7 @@ export const API = {
     AXIOS_VIDEO_COMMENT_UPDATE:`comments/{id}`,
 
     AXIOS_VIDEO_VIEW_INSERT:`videos/{id}/view`,
-    AXIOS_VIDEO_REPORT_INSERT:`videos/{id}/report`,
+    AXIOS_VIDEO_REPORT_INSERT:`videos/{id}/reports`,
     AXIOS_VIDEO_RATING_INSERT:`videos/{id}/rating`,
 
     AXIOS_VIDEO_COMMENT_TOGGLE_LIKE:`comments/{id}/like`,
@@ -73,6 +74,7 @@ export const API = {
     AXIOS_CONTEST_ENTRIES_INSERT:`contests/{id}/entries`,
     AXIOS_CONTEST_ENTRIES_VOTE:`contests/{id}/entries/{entryId}/vote`,
     AXIOS_CONTEST_ENTRIES_DELETE:`contests/{id}/entries/{entryId}`,
+    AXIOS_CONTEST_ENTRIES_GET_OWN:`contests/my-entries`,
 
     AXIOS_OPPORTUNITIES_GET_ALL:`opportunities`,
     AXIOS_OPPORTUNITIES_GET_BY_ID:`opportunities/{id}`,

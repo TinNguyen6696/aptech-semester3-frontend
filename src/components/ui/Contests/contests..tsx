@@ -65,6 +65,8 @@ export default function Contests() {
     const [deleteTarget, setDeleteTarget] = useState(null);
     const [isCreateOpen, setIsCreateOpen] = useState(false);
     const [editingContest, setEditingContest] = useState(null);
+    const [myEntries, setMyEntries] = useState([]);
+
     // ---- Pagination state ----
     const [page, setPage] = useState(1);
     const [totalCount, setTotalCount] = useState(0);
@@ -128,7 +130,7 @@ export default function Contests() {
             setIsLoadingContests(false);
         }
     };
-
+    console.log("check contest: ", myEntries)
     useEffect(() => {
         fetchContests(page);
     }, [
@@ -144,6 +146,17 @@ export default function Contests() {
             fetchContests(1);
         }
     }, [activeTab, categoryFilter]);
+
+    const fetchMyEntries = async () => {
+        const res = await axiosClient.get(API.AXIOS_CONTEST_ENTRIES_GET_OWN);
+        if(res.data.isSuccess){
+            setMyEntries(res?.data.data.entries ?? []);
+        };
+    }
+    useEffect(()=>{
+        fetchMyEntries();
+    },[]);
+
 
     const selected = useMemo(() => contests?.find((c) => c.id === selectedId) ?? null, [contests, selectedId]);
 
@@ -233,6 +246,23 @@ export default function Contests() {
             c.category?.toLowerCase().includes(q)
         );
     }, [enriched, searchQuery]);
+
+    const filteredEntries = useMemo(() => {
+        let result = myEntries;
+        if (categoryFilter) {
+            result = result.filter((e) => e.contestCategory === categoryFilter);
+        }
+        if (searchQuery.trim()) {
+            const q = searchQuery.toLowerCase().trim();
+            result = result.filter(
+                (e) =>
+                    e.videoTitle?.toLowerCase().includes(q) ||
+                    e.contestTitle?.toLowerCase().includes(q) ||
+                    e.contestCategory?.toLowerCase().includes(q)
+            );
+        }
+        return result;
+    }, [myEntries, categoryFilter, searchQuery]);
 
     const activeCount = enriched.filter((c) => c.status === "active").length;
 
@@ -324,12 +354,8 @@ export default function Contests() {
                         <p className="text-xs text-gray-400 mt-0.5">Voting open</p>
                     </div>
                     <div className="border border-gray-100 rounded-xl p-4">
-                        <p className="text-xl font-extrabold text-gray-900"></p>
+                        <p className="text-xl font-extrabold text-gray-900">{myEntries.length}</p>
                         <p className="text-xs text-gray-400 mt-0.5">My entries</p>
-                    </div>
-                    <div className="border border-gray-100 rounded-xl p-4">
-                        <p className="text-xl font-extrabold text-gray-900"></p>
-                        <p className="text-xs text-gray-400 mt-0.5">Votes cast</p>
                     </div>
                 </div>
 
@@ -388,11 +414,105 @@ export default function Contests() {
                     </div>
                 </div>
 
-                {/* Contest grid */}
-                {isLoadingContests ? (
+               {/* Contest grid */}
+                {activeTab === "mine" ? (
+                    filteredEntries.length > 0 ? (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                            {filteredEntries.map((entry) => {
+                                const cfg = getSingleCategoryConfig(entry.contestCategory);
+                                const status = getStatus(entry.contestStartDate, entry.contestEndDate);
+                                const st = STATUS_CONFIG[status];
+                                return (
+                                    <div
+                                        key={entry.entryId}
+                                        className="border border-gray-100 rounded-2xl p-5 flex flex-col gap-3 hover:shadow-sm hover:border-gray-200 transition-all"
+                                    >
+                                        {/* Thumbnail */}
+                                        {/* Thumbnail + video on hover */}
+                                        <div
+                                            className="w-full aspect-video rounded-xl bg-gray-100 overflow-hidden relative group/thumb cursor-pointer"
+                                        >
+                                            <video
+                                                src={`${API.URL}${entry.videoUrl}`}
+                                                className="w-full h-full object-cover"
+                                                muted
+                                                loop
+                                                playsInline
+                                                preload="metadata"
+                                                onMouseEnter={(e) => e.currentTarget.play()}
+                                                onMouseLeave={(e) => { e.currentTarget.pause(); e.currentTarget.currentTime = 0; }}
+                                            />
+                                        </div>
+
+                                        {/* Titles */}
+                                        <div className="flex items-start justify-between gap-2">
+                                            <div className="min-w-0">
+                                                <p className="text-sm font-bold text-gray-900 truncate">
+                                                    {entry.videoTitle}
+                                                </p>
+                                                <p className="text-xs text-gray-400 mt-0.5 truncate">
+                                                    {entry.contestTitle}
+                                                </p>
+                                            </div>
+                                            <button
+                                                onClick={() => navigate({ to: "/contestDetail", search: { id: entry.contestId } })}
+                                                className="flex-shrink-0 inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-gray-200 text-xs font-semibold text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-colors"
+                                            >
+                                                <Icon.ChevronRight />
+                                                Go to contest
+                                            </button>
+                                        </div>
+
+                                        {/* Badges */}
+                                        <div className="flex items-center gap-2 flex-wrap">
+                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${cfg.badgeBg} ${cfg.badgeColor}`}>
+                                                {cfg.label}
+                                            </span>
+                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${st.badgeBg} ${st.badgeColor}`}>
+                                                {st.label}
+                                            </span>
+                                        </div>
+
+                                        {/* Footer */}
+                                        <div className="flex items-center justify-between text-xs text-gray-400 mt-auto pt-2 border-t border-gray-100">
+                                            <span className="inline-flex items-center gap-1">
+                                                <Icon.Calendar />
+                                                {DateUtil.formatDate(entry.contestStartDate)} – {DateUtil.formatDate(entry.contestEndDate)}
+                                            </span>
+                                            <span className="inline-flex items-center gap-1 font-semibold text-blue-600">
+                                                <Icon.ChevronUp />
+                                                {entry.voteCount} vote{entry.voteCount !== 1 ? "s" : ""}
+                                            </span>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    ) : (
+                        <div className="border border-dashed border-gray-200 rounded-2xl py-16 text-center">
+                            <div className="w-12 h-12 mx-auto rounded-full bg-blue-100 flex items-center justify-center mb-3">
+                                <Icon.Trophy className="text-blue-600" />
+                            </div>
+                            <p className="text-sm font-semibold text-gray-700">
+                                {searchQuery || categoryFilter ? "No entries match your search" : "You haven't entered any contests yet"}
+                            </p>
+                            <p className="text-xs text-gray-400 mt-1">
+                                {searchQuery || categoryFilter ? "Try a different search or category." : "Discover a contest and submit one of your videos."}
+                            </p>
+                            <button
+                                onClick={() => setActiveTab("discover")}
+                                className="cursor-pointer mt-4 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-5 py-2.5 rounded-lg transition-colors"
+                            >
+                                Discover contests
+                            </button>
+                        </div>
+                    )
+                ) : isLoadingContests ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                         {Array.from({ length: 3 }).map((_, i) => (
-                            <div key={i} className="border border-gray-100 rounded-2xl p-5 h-44 animate-pulse bg-gray-50" />
+                            <div 
+                            key={i} 
+                            className="border border-gray-100 rounded-2xl p-5 h-44 animate-pulse bg-gray-50" />
                         ))}
                     </div>
                 ) : filtered.length > 0 ? (
@@ -411,96 +531,43 @@ export default function Contests() {
                                         <div className={`w-10 h-10 rounded-lg ${cfg.iconBg} flex items-center justify-center`}>
                                             {cfg.icon}
                                         </div>
-
                                         <div className="flex items-center gap-2">
-
-                                            <span 
-                                                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${st.badgeBg} ${st.badgeColor}`}
-                                            >
+                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${st.badgeBg} ${st.badgeColor}`}>
                                                 {st.label}
                                             </span>
-
-
                                             {role === StringValue.ADMIN && (
                                                 <div className="relative">
-
-                                                <button
-                                                    onClick={(e)=>{
-                                                        e.stopPropagation();
-                                                        setOpenMenuId(
-                                                            openMenuId === c.id ? null : c.id
-                                                        );
-                                                    }}
-                                                    className="
-                                                        p-1 rounded-md
-                                                        text-gray-400
-                                                        hover:bg-gray-100
-                                                    "
-                                                >
-                                                    <Icon.MoreVertical />
-                                                </button>
-
-
-                                                {
-                                                    openMenuId === c.id && (
-
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setOpenMenuId(openMenuId === c.id ? null : c.id);
+                                                        }}
+                                                        className="p-1 rounded-md text-gray-400 hover:bg-gray-100"
+                                                    >
+                                                        <Icon.MoreVertical />
+                                                    </button>
+                                                    {openMenuId === c.id && (
                                                         <div
-                                                            onClick={(e)=>e.stopPropagation()}
-                                                            className="
-                                                                absolute right-0 mt-2
-                                                                w-32
-                                                                bg-white
-                                                                border border-gray-100
-                                                                rounded-lg
-                                                                shadow-lg
-                                                                z-50
-                                                                py-1
-                                                            "
+                                                            onClick={(e) => e.stopPropagation()}
+                                                            className="absolute right-0 mt-2 w-32 bg-white border border-gray-100 rounded-lg shadow-lg z-50 py-1"
                                                         >
-
                                                             <button
-                                                                onClick={()=>{
-                                                                    handleUpdateContest(c)
-                                                                    setOpenMenuId(null);
-                                                                }}
-                                                                className="
-                                                                    w-full
-                                                                    text-left
-                                                                    px-3 py-2
-                                                                    text-sm
-                                                                    hover:bg-gray-50
-                                                                    text-gray-700
-                                                                "
+                                                                onClick={() => { handleUpdateContest(c); setOpenMenuId(null); }}
+                                                                className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 text-gray-700"
                                                             >
                                                                 Update
                                                             </button>
-
                                                             <button
-                                                                className="
-                                                                    w-full
-                                                                    text-left
-                                                                    px-3 py-2
-                                                                    text-sm
-                                                                    hover:bg-red-50
-                                                                    text-red-600
-                                                                "
-                                                                onClick={()=>{
-                                                                    handleDeleteContest(c);
-                                                                    setOpenMenuId(null);
-                                                                }}
+                                                                onClick={() => { handleDeleteContest(c); setOpenMenuId(null); }}
+                                                                className="w-full text-left px-3 py-2 text-sm hover:bg-red-50 text-red-600"
                                                             >
                                                                 Delete
                                                             </button>
                                                         </div>
-
-                                                    )
-                                                }
-
-                                            </div>
+                                                    )}
+                                                </div>
                                             )}
-
                                         </div>
-
                                     </div>
 
                                     <div>
@@ -517,7 +584,7 @@ export default function Contests() {
                                             <Icon.Calendar /> {DateUtil.formatDate(c.startDate)} – {DateUtil.formatDate(c.endDate)}
                                         </span>
                                         <span className="inline-flex items-center gap-1">
-                                            <Icon.Users />  entries
+                                            <Icon.Users /> entries
                                         </span>
                                     </div>
 
@@ -540,20 +607,8 @@ export default function Contests() {
                         <div className="w-12 h-12 mx-auto rounded-full bg-blue-100 flex items-center justify-center mb-3">
                             <Icon.Trophy className="text-blue-600" />
                         </div>
-                        <p className="text-sm font-semibold text-gray-700">
-                            {activeTab === "mine" ? "You haven't entered any contests yet" : "No contests found"}
-                        </p>
-                        <p className="text-xs text-gray-400 mt-1">
-                            {activeTab === "mine" ? "Discover a contest and submit one of your videos." : "Try a different search or category."}
-                        </p>
-                        {activeTab === "mine" && (
-                            <button
-                                onClick={() => setActiveTab("discover")}
-                                className="cursor-pointer mt-4 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-5 py-2.5 rounded-lg transition-colors"
-                            >
-                                Discover contests
-                            </button>
-                        )}
+                        <p className="text-sm font-semibold text-gray-700">No contests found</p>
+                        <p className="text-xs text-gray-400 mt-1">Try a different search or category.</p>
                     </div>
                 )}
 
