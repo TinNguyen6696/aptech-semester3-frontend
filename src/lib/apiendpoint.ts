@@ -83,4 +83,10 @@ export const API = {
     AXIOS_OPPORTUNITIES_DELETE:`opportunities/{id}`,
 
     AXIOS_MENTORS_GET_ALL:`/users/mentors`,
+
+    AXIOS_MESSAGE_INSERT:`messages`,
+    AXIOS_MESSAGE_GET_ALL:`messages/conversations`,
+    AXIOS_MESSAGE_GET_UNREAD:`messages/unread-count`,
+    AXIOS_MESSAGE_GET_BY_USER_ID:`messages/{userId}`,
+    AXIOS_MESSAGE_MARK_READ:`messages/{userId}/read`,
 }

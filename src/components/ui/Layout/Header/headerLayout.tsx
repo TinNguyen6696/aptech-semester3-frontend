@@ -4,6 +4,7 @@ import './headerLayout.css';
 import { StringValue } from '@/lib/stringValue';
 import { API } from '@/lib/apiendpoint';
 import { useUserStore } from '@/Store/userStore';
+import axiosClient from '@/services/axiosClient';
  
 const ALL_ROLES = ['guest', StringValue.MEMBER, StringValue.MENTOR, StringValue.RECRUITER, StringValue.ADMIN];
 
@@ -14,11 +15,18 @@ const NAV_ITEMS = [
     { label: 'Communities', href: '/communities', roles: ALL_ROLES },
     { label: 'MyVideos', href:'/myvideos', roles: [StringValue.MEMBER] }
 ];
-
+const DISMISS_KEY = "msg_badge_dismissed_until";
 
 export default function HeaderLayout(){
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const [unreadCount, setUnreadCount] = useState(0);
+    const isBadgeDismissed = () => {
+        const until = localStorage.getItem(DISMISS_KEY);
+        if (!until) return false;
+        return Date.now() < parseInt(until);
+    };
+    const [badgeDismissed, setBadgeDismissed] = useState(isBadgeDismissed);
     const dropdownRef = useRef(null);
     const location = useLocation();
     const currentPath = location.pathname;
@@ -26,14 +34,13 @@ export default function HeaderLayout(){
         if (href === '/') return currentPath === '/';
         return currentPath === href || currentPath.startsWith(href + '/');
     };
-
     const { userInfo, updateUserInfo, clearUserInfo } = useUserStore();
     const currentRole = userInfo?.role ?? 'guest';
     const visibleNavItems = NAV_ITEMS.filter((item) => item.roles.includes(currentRole));
     const previewUrl = userInfo?.profileImageUrl
         ? `${API.URL}/${userInfo.profileImageUrl}`
         : null;
-    
+     
     useEffect(() => {
         function handleClickOutside(event) {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -43,6 +50,36 @@ export default function HeaderLayout(){
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
+
+    useEffect(() => {
+        if (!userInfo) return;
+        const fetchUnread = async () => {
+            try {
+                const res = await axiosClient.get(API.AXIOS_MESSAGE_GET_UNREAD);
+                if (res.data.isSuccess) {
+                    setUnreadCount(res.data.data ?? 0);
+                }
+            } catch {}
+        };
+        fetchUnread();
+        const interval = setInterval(fetchUnread, 30000);
+        return () => clearInterval(interval);
+    }, [userInfo]);
+   
+    useEffect(() => {
+        if (!badgeDismissed) return;
+        const until = parseInt(localStorage.getItem(DISMISS_KEY) ?? "0");
+        const remaining = until - Date.now();
+        if (remaining <= 0) {
+            setBadgeDismissed(false);
+            return;
+        }
+        const t = setTimeout(() => {
+            setBadgeDismissed(false);
+            localStorage.removeItem(DISMISS_KEY);
+        }, remaining);
+        return () => clearTimeout(t);
+    }, [badgeDismissed]);
 
     const handleLogout = () => {
         clearUserInfo();
@@ -88,6 +125,25 @@ export default function HeaderLayout(){
                 </div>
 
                 <div className="hidden md:flex items-center gap-5">
+                    {userInfo && (
+                        <a href="/messages"
+                            className="relative p-1.5 text-gray-500 hover:text-gray-900 transition-colors"
+                            onClick={() => {
+                                const until = Date.now() + 10 * 60 * 1000;
+                                localStorage.setItem(DISMISS_KEY, until.toString());
+                                setBadgeDismissed(true);
+                            }}
+                        >
+                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                            </svg>
+                            {unreadCount > 0 && !badgeDismissed && (
+                                <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                                    {unreadCount > 9 ? "9+" : unreadCount}
+                                </span>
+                            )}
+                        </a>
+                    )}
                     {userInfo ? (
                             <div className="relative" ref={dropdownRef}>
                                 <button
@@ -126,6 +182,9 @@ export default function HeaderLayout(){
                                         </div>
                                         <a href="/profile" className="block px-3.5 py-2 text-sm text-gray-600 hover:bg-gray-50">
                                             Profile
+                                        </a>
+                                        <a href="/messages" className="block px-3.5 py-2 text-sm text-gray-600 hover:bg-gray-50">
+                                            Messages
                                         </a>
                                         <button
                                             onClick={handleLogout}

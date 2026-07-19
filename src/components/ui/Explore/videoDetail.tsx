@@ -68,7 +68,7 @@ export default function VideoDetail({ id }) {
             setHasCountedView(true);
         }
     };
-
+    console.log("check video: ", video)
     //Like
     const handleToggleLike = async () => {
         if (isLiking) return;
@@ -155,8 +155,8 @@ export default function VideoDetail({ id }) {
             } else {
                 toast.error(res.data.message);
             }
-        } catch {
-            toast.error("Unable to submit report");
+        } catch(error) {
+            toast.error(error.response?.data?.message );
         } finally {
             setIsReporting(false);
         }

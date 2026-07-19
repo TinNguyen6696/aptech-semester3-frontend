@@ -88,16 +88,28 @@ export default function MentorProfile({ id }) {
         }
     };
 
-    const sendMessage = () => {
+    const sendMessage = async () => {
         if (!messageDraft.trim()) return;
-        setMessageSent(true);
-        setMessageDraft("");
-        setTimeout(() => {
-            setMessageOpen(false);
-            setMessageSent(false);
-        }, 1200);
+        try {
+            const res = await axiosClient.post(API.AXIOS_MESSAGE_INSERT, {
+                ReceiverId: id,
+                Content: messageDraft.trim(),
+            });
+            if (res.data.isSuccess) {
+                setMessageSent(true);
+                setMessageDraft("");
+                setTimeout(() => {
+                    setMessageOpen(false);
+                    setMessageSent(false);
+                }, 1200);
+            } else {
+                toast.error(res.data.message || "Failed to send message");
+            }
+        } catch {
+            toast.error("Failed to send message");
+        }
     };
-    console.log("check mentor: ", mentor)
+    
     return (
         <section className="px-6 sm:px-10 lg:px-16 py-10">
             <div className="max-w-4xl mx-auto">
