@@ -6,7 +6,7 @@ import { toast } from 'react-toastify';
 
 const CATEGORIES = ['Singer', 'Dancer', 'Artist', 'Designer', 'Coder', 'Photographer'];
 const ALLOWED_VIDEO_TYPE = 'video/mp4';
-const MAX_VIDEO_SIZE_BYTES = 50 * 1024 * 1024;
+const MAX_VIDEO_SIZE_BYTES = 300 * 1024 * 1024;
 
 const emptySlot = () => ({
   file: null,
@@ -39,7 +39,7 @@ export default function UploadVideoModal({ isOpen, onClose, onUploadSuccess }) {
     }
 
     if (selectedFile.size > MAX_VIDEO_SIZE_BYTES) {
-      toast.error(`File is too large (${(selectedFile.size / (1024 * 1024)).toFixed(1)}MB). Maximum file size is 50MB.`);
+      toast.error(`File is too large (${(selectedFile.size / (1024 * 1024)).toFixed(1)}MB). Maximum file size is 300MB.`);
       return;
     }
     if (slot.previewUrl) URL.revokeObjectURL(slot.previewUrl);
@@ -141,7 +141,7 @@ export default function UploadVideoModal({ isOpen, onClose, onUploadSuccess }) {
                 Drag and drop your video here
               </p>
               <p className="text-xs text-gray-400 mt-1">
-                or <span className="text-blue-600 font-medium">browse</span> from your device · MP4, up to 50MB
+                or <span className="text-blue-600 font-medium">browse</span> from your device · MP4, up to 300MB
               </p>
               <input
                 ref={fileInputRef}

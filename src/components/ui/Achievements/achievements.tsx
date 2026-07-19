@@ -9,6 +9,9 @@ import { toast } from "react-toastify";
 import DateUtil from "@/lib/dateUtil";
 import type { AchievementTypeConfig, Achievement, AchievementFormValues } from "@/types/achievement.types";
 
+const buildCertificateUrl = (path: string) => `${API.URL}/${path.replace(/^\//, "")}`;
+const isPdfCertificate = (path: string) => /\.pdf$/i.test(path);
+
 export default function Achievements() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [typeOptions, setTypeOptions] = useState<AchievementTypeConfig[]>([]);
@@ -155,7 +158,7 @@ export default function Achievements() {
             issuer: Yup.string().trim().required("Organization is required").max(80, "Keep it under 80 characters"),
             issuedDate: Yup.string().required("Date is required"),
             description: Yup.string().required("Description is required").trim().max(200, "Keep it under 200 characters"),
-            certUrl: Yup.string().trim().url("Enter a valid URL").nullable().notRequired(),
+            externalUrl: Yup.string().trim().url("Enter a valid URL").nullable().notRequired(),
         }); 
     }, [typeOptions]);
     const formik = useFormik<AchievementFormValues>({
@@ -166,22 +169,29 @@ export default function Achievements() {
             issuer: editTarget?.issuer ?? "",
             issuedDate: editTarget?.issuedDate ? editTarget.issuedDate.slice(0, 10) : "",
             description: editTarget?.description ?? "",
-            certUrl: editTarget?.certUrl ?? "",
+            externalUrl: editTarget?.externalUrl ?? "",
+            certificateImage: null,
         },
         validationSchema: achievementSchema,
         onSubmit: async (values) => {
-            const req = {
-                Type:values.type || "",
-                Title:values.title || "",
-                Issuer:values.issuer || "",
-                IssuedDate:values.issuedDate ? new Date(values.issuedDate).toISOString(): null,
-                CertificateUrl:values.certUrl || "",
-                Description:values.description || ""
-            };
+            const formData = new FormData();
+            formData.append("Type", values.type || "");
+            formData.append("Title", values.title || "");
+            if (values.issuer) formData.append("Issuer", values.issuer);
+            if (values.issuedDate) {
+                formData.append("IssuedDate", new Date(values.issuedDate).toISOString());
+            }
+            if (values.description) formData.append("Description", values.description);
+            if (values.externalUrl) formData.append("ExternalUrl", values.externalUrl ?? "");
+
+            if (values.certificateImage) {
+                formData.append("CertificateImage", values.certificateImage);
+            }
+            
             try {
                 const res = editTarget
-                ? await axiosClient.put(API.AXIOS_ACHIEVEMENT_UPDATE.replace("{id}", editTarget.id), req)
-                : await axiosClient.post(API.AXIOS_ACHIEVEMENT_INSERT, req);
+                ? await axiosClient.put(API.AXIOS_ACHIEVEMENT_UPDATE.replace("{id}", editTarget.id), formData)
+                : await axiosClient.post(API.AXIOS_ACHIEVEMENT_INSERT, formData);
 
                 if(res.data.isSuccess){
                     toast.success(res.data.message);
@@ -198,9 +208,6 @@ export default function Achievements() {
                 } else {
                     console.log("No response received:", error);
                 }
-            } finally {
-                // setIsModalOpen(false);
-                // formik.resetForm();
             }
         },
     });
@@ -239,7 +246,20 @@ export default function Achievements() {
         }
     };
 
+    const certificatePreviewUrl = useMemo(() => {
+        if (formik.values.certificateImage) {
+            return URL.createObjectURL(formik.values.certificateImage);
+        }
+        return null;
+    }, [formik.values.certificateImage]);
 
+    useEffect(() => {
+        return () => {
+            if (certificatePreviewUrl) {
+                URL.revokeObjectURL(certificatePreviewUrl);
+            }
+        };
+    }, [certificatePreviewUrl]);
     
     return (
         <div className="max-w-3xl mx-auto mb-5 bg-white rounded-2xl border border-gray-100 shadow-sm px-6 sm:px-10 py-10">
@@ -256,9 +276,34 @@ export default function Achievements() {
                         mapUiAchievement.map((item, index) => (
                             <div key={index} className="border border-gray-100 rounded-xl p-4 flex gap-4">
                                
-                                <div className={`flex-shrink-0 w-10 h-10 rounded-lg ${item.iconBg} flex items-center justify-center`}>
-                                    {item.icon}
-                                </div>
+                                {item.certificateUrl ? (
+                                    <a
+                                        href={buildCertificateUrl(item.certificateUrl)}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        title="View certificate"
+                                        className="flex-shrink-0"
+                                    >
+                                        {isPdfCertificate(item.certificateUrl) ? (
+                                            <div className="w-10 h-10 rounded-lg bg-red-100 flex items-center justify-center hover:bg-red-200 transition-colors">
+                                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#DC2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                                    <path d="M14 2v6h6" />
+                                                </svg>
+                                            </div>
+                                        ) : (
+                                            <img
+                                                src={buildCertificateUrl(item.certificateUrl)}
+                                                alt={item.title}
+                                                className="w-10 h-10 rounded-lg object-cover border border-gray-200 hover:opacity-80 transition-opacity"
+                                            />
+                                        )}
+                                    </a>
+                                ) : (
+                                    <div className={`flex-shrink-0 w-10 h-10 rounded-lg ${item.iconBg} flex items-center justify-center`}>
+                                        {item.icon}
+                                    </div>
+                                )}
 
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-2 flex-wrap">
@@ -269,19 +314,49 @@ export default function Achievements() {
                                     </div>
                                     <p className="text-xs text-gray-400 mt-1">{item.issuer} {item.formattedDate}</p>
                                     <p className="text-sm text-gray-600 mt-2 leading-relaxed">{item.description}</p>
+                                    {item.externalUrl && (
+                                        <a
+                                            href={item.externalUrl}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="cursor-pointer inline-flex items-center gap-1 mt-2 text-sm font-medium text-blue-600 hover:text-blue-700 hover:underline break-all">
+                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                                                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                                            </svg>
+                                            {item.externalUrl}
+                                        </a>
+                                    )}
                                 </div>
                             
                                 <div className="flex-shrink-0 flex items-start gap-4 text-sm font-semibold">
-                                    {item.hasCertificate && (
-                                        <button className="cursor-pointer flex items-center gap-1 text-gray-500 hover:text-gray-700 transition-colors">
+                                    {item.certificateUrl && (
+                                        <a
+                                            href={buildCertificateUrl(item.certificateUrl)}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="cursor-pointer flex items-center gap-1 text-gray-500 hover:text-gray-700 transition-colors">
                                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                                 <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
                                                 <path d="M15 3h6v6"/><path d="M10 14 21 3"/>
                                             </svg>
                                             Certificate
-                                        </button>
+                                        </a>
                                     )}
-                                    <button 
+                                    {item.externalUrl && (
+                                        <a
+                                            href={item.externalUrl}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="cursor-pointer flex items-center gap-1 text-gray-500 hover:text-gray-700 transition-colors">
+                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                                                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                                            </svg>
+                                            Link
+                                        </a>
+                                    )}
+                                    <button
                                         onClick={() => openEditModal(item)}
                                         className="cursor-pointer text-gray-500 hover:text-gray-700 transition-colors">
                                         Edit
@@ -327,7 +402,7 @@ export default function Achievements() {
                 >
                     <div className="bg-white rounded-2xl w-full max-w-md max-h-[90vh] overflow-y-auto p-6 shadow-xl">
                         <div className="flex items-start justify-between mb-1">
-                            <h3 className="text-base font-bold text-gray-900">Add achievement</h3>
+                            <h3 className="text-base font-bold text-gray-900">{editTarget ? "Edit achievement" : "Add achievement"}</h3>
                             <button
                                 onClick={closeModal}
                                 className="cursor-pointer text-gray-400 hover:text-gray-600 transition-colors"
@@ -339,7 +414,9 @@ export default function Achievements() {
                             </button>
                         </div>
                         <p className="text-sm text-gray-500 mb-5">
-                            Add a contest win, certification, award or other achievement.
+                            {editTarget
+                                ? "Update the details of your achievement."
+                                : "Add a contest win, certification, award or other achievement."}
                         </p>
 
                         <form onSubmit={formik.handleSubmit} className="space-y-4">
@@ -434,21 +511,123 @@ export default function Achievements() {
                                     {formik.touched.description && formik.errors.description && (
                                         <p className="text-red-500 text-xs">{formik.errors.description}</p>
                                     )}
-                                    <p className="text-xs text-gray-400 mt-1.5 text-right">{formik.values.description.length}/300</p>
+                                    <p className="text-xs text-gray-400 mt-1.5 text-right">{formik.values.description.length}/200</p>
                                 </div>  
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Certificate file (optional)</label>
+
+                                {formik.values.certificateImage ? (
+                                    <div className="relative rounded-lg border border-gray-200 overflow-hidden">
+                                        {formik.values.certificateImage.type === "application/pdf" ? (
+                                            <div className="flex items-center gap-3 p-4 h-40 bg-gray-50">
+                                                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#DC2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                                    <path d="M14 2v6h6" />
+                                                </svg>
+                                                <span className="text-sm text-gray-700 font-medium break-all">{formik.values.certificateImage.name}</span>
+                                            </div>
+                                        ) : (
+                                            <img
+                                                src={certificatePreviewUrl ?? undefined}
+                                                alt="Certificate preview"
+                                                className="w-full h-40 object-cover"
+                                            />
+                                        )}
+                                        <button
+                                            type="button"
+                                            onClick={() => formik.setFieldValue("certificateImage", null)}
+                                            className="cursor-pointer absolute top-2 right-2 bg-black/60 hover:bg-black/75 text-white rounded-full w-7 h-7 flex items-center justify-center transition-colors"
+                                            aria-label="Remove file"
+                                        >
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                <path d="M18 6 6 18M6 6l12 12" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                ) : editTarget?.certificateUrl ? (
+                                    <div className="relative rounded-lg border border-gray-200 overflow-hidden">
+                                        {isPdfCertificate(editTarget.certificateUrl) ? (
+                                            <a
+                                                href={buildCertificateUrl(editTarget.certificateUrl)}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="flex items-center gap-3 p-4 h-40 bg-gray-50 hover:bg-gray-100 transition-colors"
+                                            >
+                                                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#DC2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                                    <path d="M14 2v6h6" />
+                                                </svg>
+                                                <span className="text-sm text-blue-600 font-medium underline">View current PDF</span>
+                                            </a>
+                                        ) : (
+                                            <a href={buildCertificateUrl(editTarget.certificateUrl)} target="_blank" rel="noopener noreferrer">
+                                                <img
+                                                    src={buildCertificateUrl(editTarget.certificateUrl)}
+                                                    alt="Current certificate"
+                                                    className="w-full h-40 object-cover"
+                                                />
+                                            </a>
+                                        )}
+                                        <label
+                                            className="cursor-pointer absolute top-2 right-2 bg-black/60 hover:bg-black/75 text-white rounded-md px-2.5 py-1 text-xs font-semibold transition-colors"
+                                            title="Replace file"
+                                        >
+                                            Replace
+                                            <input
+                                                type="file"
+                                                accept="image/*,application/pdf"
+                                                className="hidden"
+                                                onChange={(e) => {
+                                                    const file = e.target.files?.[0];
+                                                    if (file) {
+                                                        formik.setFieldValue("certificateImage", file);
+                                                    }
+                                                    e.target.value = "";
+                                                }}
+                                            />
+                                        </label>
+                                    </div>
+                                ) : (
+                                    <label className="flex flex-col items-center justify-center gap-1.5 border border-dashed border-gray-300 rounded-lg py-6 cursor-pointer hover:bg-gray-50 transition-colors">
+                                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                            <path d="M17 8l-5-5-5 5" />
+                                            <path d="M12 3v12" />
+                                        </svg>
+                                        <span className="text-xs text-gray-500 font-medium">Click to upload an image or PDF</span>
+                                        <span className="text-[11px] text-gray-400">PNG, JPG or PDF up to 10MB</span>
+                                        <input
+                                            type="file"
+                                            accept="image/*,application/pdf"
+                                            className="hidden"
+                                            onChange={(e) => {
+                                                const file = e.target.files?.[0];
+                                                if (file) {
+                                                    formik.setFieldValue("certificateImage", file);
+                                                }
+                                                e.target.value = "";
+                                            }}
+                                        />
+                                    </label>
+                                )}
                             </div>
 
                             <div>
                                 <label className="block text-sm font-semibold text-gray-700 mb-1.5">Certificate link (optional)</label>
                                 <input
                                     type="url"
-                                    name="certUrl"
-                                    value={formik.values.certUrl}
+                                    name="externalUrl"
+                                    value={formik.values.externalUrl}
                                     onChange={formik.handleChange}
                                     onBlur={formik.handleBlur}
                                     placeholder="https://..."
                                     className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500"
                                 />
+                                {formik.touched.externalUrl && formik.errors.externalUrl && (
+                                    <p className="text-red-500 text-xs">{formik.errors.externalUrl}</p>
+                                )}
                             </div>
 
                             <div className="flex justify-end gap-2.5 pt-3 border-t border-gray-100">
