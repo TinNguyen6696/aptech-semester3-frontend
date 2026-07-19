@@ -12,8 +12,12 @@ import WinnerPodium from "./contestWinnerPodium";
 import SubmitEntryModal from "./contestSubmitEntryModal";
 import VideoExpandModal from "./videoExpandModal";
 import DateUtil from "@/lib/dateUtil";
+import { useUserStore } from "@/Store/userStore";
+import { StringValue } from "@/lib/stringValue";
 
 export default function ContestDetail({ onBack, id }) {
+    const {userInfo} = useUserStore();
+    const role = userInfo?.role;
     const navigate = useNavigate();
     const [contest, setContest] = useState<any>(null);
     const [ownVideos, setOwnVideos] = useState([]);
@@ -95,9 +99,11 @@ export default function ContestDetail({ onBack, id }) {
         setEntries((prev) =>
             prev.map((e) =>
                 e.id === entryId
-                    ? { ...e, votedByMe: !e.votedByMe, voteCount: e.votedByMe 
-                    ? e.voteCount + 1
-                    : e.voteCount - 1 }
+                    ? {  ...e,
+                        isVoted: !e.isVoted,
+                        voteCount: e.isVoted
+                            ? e.voteCount - 1
+                            : e.voteCount + 1}
                     : e
             )
         );
@@ -116,7 +122,11 @@ export default function ContestDetail({ onBack, id }) {
             setEntries((prev) =>
                 prev.map((e) =>
                     e.id === entryId
-                        ? { ...e, votedByMe: !e.votedByMe, voteCount: e.voteCount + (e.votedByMe ? -1 : 1) }
+                        ? {...e,
+                            isVoted: !e.isVoted,
+                            voteCount: e.isVoted
+                                ? e.voteCount - 1
+                                : e.voteCount + 1}
                         : e
                 )
             );
@@ -207,25 +217,27 @@ export default function ContestDetail({ onBack, id }) {
                         </div>
                     </div>
 
-                    <button
-                        onClick={handleOpenSubmitModal}
-                        disabled={hasSubmitted || isEnded || statusKey === "upcoming"}
-                        className={`cursor-pointer flex-shrink-0 inline-flex items-center gap-1.5 text-sm font-semibold px-4 py-2.5 rounded-lg shadow-sm transition-colors ${
-                            hasSubmitted || isEnded || statusKey === "upcoming"
-                                ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                                : "bg-blue-600 hover:bg-blue-700 text-white"
-                        }`}
-                    >
-                        {hasSubmitted ? (
-                            <><IconContestDetail.Check className="w-4 h-4" /> You've submitted</>
-                        ) : isEnded ? (
-                            "Contest ended"
-                        ) : statusKey === "upcoming" ? (
-                            "Not open yet"
-                        ) : (
-                            "Submit your video"
-                        )}
-                    </button>
+                    {role !== StringValue.RECRUITER && (
+                        <button
+                            onClick={handleOpenSubmitModal}
+                            disabled={hasSubmitted || isEnded || statusKey === "upcoming"}
+                            className={`cursor-pointer flex-shrink-0 inline-flex items-center gap-1.5 text-sm font-semibold px-4 py-2.5 rounded-lg shadow-sm transition-colors ${
+                                hasSubmitted || isEnded || statusKey === "upcoming"
+                                    ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                                    : "bg-blue-600 hover:bg-blue-700 text-white"
+                            }`}
+                        >
+                            {hasSubmitted ? (
+                                <><IconContestDetail.Check className="w-4 h-4" /> You've submitted</>
+                            ) : isEnded ? (
+                                "Contest ended"
+                            ) : statusKey === "upcoming" ? (
+                                "Not open yet"
+                            ) : (
+                                "Submit your video"
+                            )}
+                        </button>
+                    )}
                 </div>
                 {statusKey === "upcoming" && contest?.startDate && (
                     <UpcomingBanner startDate={contest.startDate} endDate={contest.endDate} />
@@ -245,6 +257,7 @@ export default function ContestDetail({ onBack, id }) {
                                         onVote={handleVote}
                                         onOpen={setOpenedEntry}
                                         onDelete={setDeletingEntryId}
+                                        role={role}
                                     />
                                 ))}
                             </div>

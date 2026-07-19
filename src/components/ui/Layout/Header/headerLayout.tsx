@@ -33,7 +33,15 @@ export default function HeaderLayout(){
     const previewUrl = userInfo?.profileImageUrl
         ? `${API.URL}/${userInfo.profileImageUrl}`
         : null;
+    const currentRole = userInfo?.role;
+    const navItems = NAV_ITEMS.filter(item => {
+        if (!item.allowRoles) return true;
 
+        if (!currentRole) return false;
+
+        return item.allowRoles.includes(currentRole);
+    });
+    
     useEffect(() => {
         function handleClickOutside(event) {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {

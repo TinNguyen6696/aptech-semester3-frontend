@@ -19,5 +19,5 @@ export const StringValue = {
     MEMBER:`Member`,
     MENTOR:`Mentor`,
     RECRUITER:`Recruiter`,
-
+    GUEST:`Guest`,
 } as const;

@@ -52,8 +52,8 @@ const CreateContestSchema = Yup.object({
 
 
 export default function Contests() {
-    const role = useUserStore((s) => s.userInfo?.role);
-    console.log("check role: ", role)
+    const {userInfo} = useUserStore();
+    const role = userInfo?.role;
     const navigate = useNavigate();
     const [options, setOptions] = useState();
     const [contests, setContests] = useState([]);
@@ -71,6 +71,16 @@ export default function Contests() {
     const [totalPages, setTotalPages] = useState(1);
     const [selectedId, setSelectedId] = useState(null);
     const categoryKeys = options?.talentCategories ?? [];
+
+    const TAPS = [
+        { id: "discover", label: "Discover" },
+        { id: "mine", label: "My entries" },
+    ].filter((tab) => {
+        if (tab.id === "mine" && role === StringValue.RECRUITER) {
+            return false;
+        }
+        return true;
+    });
 
     useEffect(() => {
         const fetchOptions = async () => {
@@ -325,10 +335,7 @@ export default function Contests() {
 
                 {/* Tabs */}
                 <div className="flex items-center gap-1 border border-gray-100 rounded-lg p-1 w-fit mb-5">
-                    {[
-                        { id: "discover", label: "Discover" },
-                        { id: "mine", label: "My entries" },
-                    ].map((tab) => (
+                    {TAPS.map((tab) => (
                         <button
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}

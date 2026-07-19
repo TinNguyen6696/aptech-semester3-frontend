@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import { ChevronLeft, ChevronRight, Heart, Plus } from "lucide-react";
 import axios from "axios";
 import { API } from "@/lib/apiendpoint";
 import AddPostModal from "./addPostModal";
@@ -7,15 +7,20 @@ import { StringValue } from "@/lib/stringValue";
 import DateUtil from "@/lib/dateUtil";
 import { getSingleCategoryConfig } from "./categoryConfig";
 import { useNavigate } from "@tanstack/react-router";
+import { useUserStore } from "@/Store/userStore";
+import axiosClient from "@/services/axiosClient";
 
 const PAGE_SIZE = 5;
 
-function PostCard({ post, communityId }) {
+function PostCard({ post, communityId, canInteract }) {
     const author = post?.author;
     const commentCount = post.commentCount ?? 0;
+    const [liked, setLiked] = useState(post.isLiked ?? false);
+    const [likeCount, setLikeCount] = useState(post.likeCount ?? 0);
+    const [isLiking, setIsLiking] = useState(false);
     const navigate = useNavigate();
     const handleClick = () => {
-    navigate({
+        navigate({
             to: "/postDetail",
             search: { id: post.id },
             state: { post } as any,
@@ -55,11 +60,42 @@ function PostCard({ post, communityId }) {
 
             {post.title && (
                 <p className="text-sm font-medium text-gray-900 mb-1">{post.title}</p>
-            )}
-            <p className="text-sm text-gray-700 leading-relaxed mb-3">{post.content}</p>
+                        )}
+                        <p className="text-sm text-gray-700 leading-relaxed mb-3">{post.content}</p>
 
-            <div className="border-t border-gray-100 pt-2 text-sm text-gray-500">
-                {post.likeCount ?? 0} likes &middot; {commentCount} {commentCount === 1 ? "comment" : "comments"}
+                        <div className="border-t border-gray-100 pt-2 flex items-center gap-3 text-sm text-gray-500">
+                <button
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        if (!canInteract || isLiking) return;
+                        const wasLiked = liked;
+                        setIsLiking(true);
+                        setLiked(!wasLiked);
+                        setLikeCount((prev) => wasLiked ? prev - 1 : prev + 1);
+                        axiosClient.post(API.AXIOS_COMMUNITY_POST_COMMENT_LIKE.replace("{id}", post.id))
+                            .then((res) => { if (!res.data.isSuccess) throw new Error(); })
+                            .catch(() => { setLiked(wasLiked); setLikeCount((prev) => wasLiked ? prev + 1 : prev - 1); })
+                            .finally(() => setIsLiking(false));
+                    }}
+                    disabled={!canInteract || isLiking}
+                    className={`flex items-center gap-1 transition-colors disabled:cursor-not-allowed ${
+                        liked ? "text-red-500" : "text-gray-400 hover:text-red-400"
+                    }`}
+                >
+                    <Heart
+                        size={15}
+                        className={`transition-transform duration-150 ${liked ? "scale-110 fill-red-500" : "scale-100 fill-none"}`}
+                        strokeWidth={liked ? 0 : 2}
+                    />
+                    <span className="text-xs font-medium">{likeCount}</span>
+                </button>
+
+                <span>·</span>
+                <span>{commentCount} {commentCount === 1 ? "comment" : "comments"}</span>
+
+                {!canInteract && (
+                    <span className="text-xs text-red-400">(Recruiter cannot interact)</span>
+                )}
             </div>
         </div>
     );
@@ -106,9 +142,12 @@ function Pagination({ currentPage, totalPages, onPageChange }) {
 }
 
 export default function CommunityBoard({ id }) {
+    const {userInfo } = useUserStore();
+    const role = userInfo?.role;
+    const canInteract = role !== StringValue.RECRUITER;
+    console.log("check role: ", role)
     const [community, setCommunity] = useState(null);
     const [isLoadingCommunity, setIsLoadingCommunity] = useState(true);
-
     const [posts, setPosts] = useState([]);
     const [isLoadingPosts, setIsLoadingPosts] = useState(true);
     const [currentPage, setCurrentPage] = useState(1);
@@ -123,7 +162,7 @@ export default function CommunityBoard({ id }) {
             setIsLoadingCommunity(true);
             try {
                 const url = API.COMMUNITY_GET_BY_ID.replace("{id}", id);
-                const response = await axios.get(url);
+                const response = await axiosClient.get(url);
                 setCommunity(response.data.data ?? null);
             } catch (error) {
                 console.error("Error fetching community:", error);
@@ -141,7 +180,7 @@ export default function CommunityBoard({ id }) {
             setIsLoadingPosts(true);
             try {
                 const url = API.COMMUNITY_POSTS_GET_ALL.replace("{id}", id);
-                const response = await axios.get(url, {
+                const response = await axiosClient.get(url, {
                     params: { page: currentPage, pageSize: PAGE_SIZE },
                 });
                 const data = response.data.data ?? {};
@@ -161,7 +200,7 @@ export default function CommunityBoard({ id }) {
         setIsLoadingPosts(true);
         try {
             const url = API.COMMUNITY_POSTS_GET_ALL.replace("{id}", id);
-            const response = await axios.get(url, { params: { page: 1, pageSize: PAGE_SIZE } });
+            const response = await axiosClient.get(url, { params: { page: 1, pageSize: PAGE_SIZE } });
             const data = response.data.data ?? {};
             setPosts(data.posts ?? []);
             setTotalPages(data.totalPages ?? 1);
@@ -198,13 +237,15 @@ export default function CommunityBoard({ id }) {
                     </div>
                 </div>
 
-                <button
-                    onClick={() => setIsAddingPost(true)}
-                    className="cursor-pointer shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors"
-                >
-                    <Plus size={16} />
-                    Add post
-                </button>
+                {role !== StringValue.MEMBER && role !== StringValue.RECRUITER && (
+                    <button
+                        onClick={() => setIsAddingPost(true)}
+                        className="cursor-pointer shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors"
+                    >
+                        <Plus size={16} />
+                        Add post
+                    </button>
+                )}
             </div>
 
             <hr className="border-gray-200 mb-5" />
@@ -216,7 +257,7 @@ export default function CommunityBoard({ id }) {
             ) : posts.length > 0 ? (
                 <div className="flex flex-col gap-3">
                     {posts.map((post) => (
-                        <PostCard key={post.id} post={post} communityId={post.communityId}/>
+                        <PostCard key={post.id} post={post} communityId={post.communityId} canInteract={canInteract}/>
                     ))}
                 </div>
             ) : (

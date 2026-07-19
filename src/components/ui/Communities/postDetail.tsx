@@ -7,6 +7,7 @@ import DateUtil from "@/lib/dateUtil";
 import axiosClient from "@/services/axiosClient";
 import { useUserStore } from "@/Store/userStore";
 import { toast } from "react-toastify";
+import { useUserStore } from "@/Store/userStore";
 
 const PAGE_SIZE = 5;
 
@@ -114,15 +115,12 @@ export default function PostDetail({ id, initialData }) {
     const { userInfo } = useUserStore();
     const [post, setPost] = useState(initialData ?? null);
     const [isLoadingPost, setIsLoadingPost] = useState(!initialData);
-
     const [comments, setComments] = useState([]);
     const [isLoadingComments, setIsLoadingComments] = useState(true);
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
-
     const [newComment, setNewComment] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
-
     const [liked, setLiked] = useState(initialData?.isLiked ?? false);
     const [likeCount, setLikeCount] = useState(initialData?.likeCount ?? 0);
     const [isLiking, setIsLiking] = useState(false);
@@ -276,15 +274,24 @@ export default function PostDetail({ id, initialData }) {
                     </p>
 
                     <div className="border-t border-gray-100 pt-2 flex items-center gap-4">
-                        <LikeButton
-                            liked={liked}
-                            likeCount={likeCount}
-                            onToggle={handleToggleLike}
-                            isSubmitting={isLiking}
-                        />
+
+                        {role === StringValue.RECRUITER ? (
+                            <span className="text-sm text-gray-500">
+                                {likeCount} likes
+                            </span>
+                        ) : (
+                            <LikeButton
+                                liked={liked}
+                                likeCount={likeCount}
+                                onToggle={handleToggleLike}
+                                isSubmitting={isLiking}
+                            />
+                        )}
+
                         <span className="text-sm text-gray-500">
                             {post.commentCount ?? 0} {(post.commentCount ?? 0) === 1 ? "comment" : "comments"}
                         </span>
+
                     </div>
                 </div>
             ) : (

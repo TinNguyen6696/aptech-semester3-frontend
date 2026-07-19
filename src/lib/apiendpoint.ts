@@ -62,4 +62,11 @@ export const API = {
     AXIOS_CONTEST_ENTRIES_INSERT:`contests/{id}/entries`,
     AXIOS_CONTEST_ENTRIES_VOTE:`contests/{id}/entries/{entryId}/vote`,
     AXIOS_CONTEST_ENTRIES_DELETE:`contests/{id}/entries/{entryId}`,
+
+    AXIOS_OPPORTUNITIES_GET_ALL:`opportunities`,
+    AXIOS_OPPORTUNITIES_GET_BY_ID:`opportunities/{id}`,
+    AXIOS_OPPORTUNITIES_GET_OWN:`opportunities/mine`,
+    AXIOS_OPPORTUNITIES_INSERT:`opportunities`,
+    AXIOS_OPPORTUNITIES_UPDATE:`opportunities/{id}`,
+    AXIOS_OPPORTUNITIES_DELETE:`opportunities/{id}`
 }
