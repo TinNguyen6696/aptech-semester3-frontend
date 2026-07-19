@@ -34,8 +34,13 @@ export default function LoginForm(){
                     const refreshToken = res.data.data.refreshToken;
                     localStorage.setItem(StringValue.ACCESS_TOKEN, token);
                     localStorage.setItem(StringValue.REFRESH_TOKEN, refreshToken);
-                    useUserStore.getState().setUserInfo(res.data.data.user);
-                    navigate({ to: '/' });
+                    const user = res.data.data.user;
+                    useUserStore.getState().setUserInfo(user);
+                    if (user.role === StringValue.ADMIN) {
+                        navigate({ to: '/admin' });
+                    } else {
+                        navigate({ to: '/' });
+                    }
                     toast.success('Signed in successfully!');
                 }              
                 resetForm();

@@ -18,10 +18,8 @@ export default function FooterLayout(){
                     <div>
                         <h4 className="text-[11px] tracking-wider font-bold text-gray-400 uppercase mb-3.5">Discover</h4>
                         <ul className="flex flex-col gap-2.5 list-none p-0 m-0">
-                            <li><a href="#" className="text-[13.5px] text-gray-600 hover:text-gray-900 no-underline">Explore</a></li>
-                            <li><a href="#" className="text-[13.5px] text-gray-600 hover:text-gray-900 no-underline">Stories</a></li>
-                            <li><a href="#" className="text-[13.5px] text-gray-600 hover:text-gray-900 no-underline">Categories</a></li>
-                            <li><a href="#" className="text-[13.5px] text-gray-600 hover:text-gray-900 no-underline">Contests</a></li>
+                            <li><a href="/explores" className="text-[13.5px] text-gray-600 hover:text-gray-900 no-underline">Explore</a></li>
+                            <li><a href="/contests" className="text-[13.5px] text-gray-600 hover:text-gray-900 no-underline">Contests</a></li>
                         </ul>
                     </div>
 
@@ -29,8 +27,8 @@ export default function FooterLayout(){
                     <div>
                         <h4 className="text-[11px] tracking-wider font-bold text-gray-400 uppercase mb-3.5">Connect</h4>
                         <ul className="flex flex-col gap-2.5 list-none p-0 m-0">
-                            <li><a href="#" className="text-[13.5px] text-gray-600 hover:text-gray-900 no-underline">Communities</a></li>
-                            <li><a href="#" className="text-[13.5px] text-gray-600 hover:text-gray-900 no-underline">Mentors</a></li>
+                            <li><a href="/communities" className="text-[13.5px] text-gray-600 hover:text-gray-900 no-underline">Communities</a></li>
+                            <li><a href="/mentors" className="text-[13.5px] text-gray-600 hover:text-gray-900 no-underline">Mentors</a></li>
                         </ul>
                     </div>
 

@@ -89,4 +89,20 @@ export const API = {
     AXIOS_MESSAGE_GET_UNREAD:`messages/unread-count`,
     AXIOS_MESSAGE_GET_BY_USER_ID:`messages/{userId}`,
     AXIOS_MESSAGE_MARK_READ:`messages/{userId}/read`,
+
+    AXIOS_ADMIN_DASHBOARD:`admin/dashboard`,
+    AXIOS_ADMIN_USERS_GET_ALL:`admin/users`,
+    AXIOS_ADMIN_USER_GET_BY_ID:`admin/users/{id}`,
+    AXIOS_ADMIN_USER_TOGGLE_ACTIVE:`admin/users/{id}/toggle-active`,
+
+    AXIOS_ADMIN_VIDEOS_GET_ALL:`admin/videos`,
+    AXIOS_ADMIN_VIDEOS_DELETE:`admin/videos/{id}`,
+
+    AXIOS_ADMIN_COMMENTS_GET_ALL:`admin/comments`,
+
+    AXIOS_ADMIN_REPORTS_GET_ALL:`admin/reports`,
+
+    AXIOS_ADMIN_REPORT_GET_BY_ID:`admin/reports/{id}`,
+    AXIOS_ADMIN_REPORT_UPDATE_STATUS:`admin/reports/{id}/status`
+
 }
