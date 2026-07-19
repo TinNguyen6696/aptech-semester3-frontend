@@ -6,6 +6,7 @@ import axiosClient from '@/services/axiosClient';
 import { useNavigate } from "@tanstack/react-router";
 import { toast } from 'react-toastify';
 import { StringValue } from '@/lib/stringValue';
+import { useUserStore } from '@/Store/userStore';
 
 export default function LoginForm(){
     const navigate = useNavigate();
@@ -33,8 +34,9 @@ export default function LoginForm(){
                     const refreshToken = res.data.data.refreshToken;
                     localStorage.setItem(StringValue.ACCESS_TOKEN, token);
                     localStorage.setItem(StringValue.REFRESH_TOKEN, refreshToken);
-                    localStorage.setItem(StringValue.USER_INFO, JSON.stringify(res.data.data.user));
+                    useUserStore.getState().setUserInfo(res.data.data.user);
                     navigate({ to: '/' });
+                    toast.success('Signed in successfully!');
                 }              
                 resetForm();
             
