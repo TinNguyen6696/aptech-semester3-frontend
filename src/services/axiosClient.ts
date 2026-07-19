@@ -42,7 +42,13 @@ axiosClient.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    // Auth endpoints: a 401 here means bad credentials / invalid token, NOT an
+    // expired session — let it reject so the caller can show the error, instead
+    // of triggering a token refresh + redirect (which just reloads the page).
+    const authPaths = ['auth/login', 'auth/register', 'auth/refresh', 'auth/forgot-password', 'auth/reset-password'];
+    const isAuthRequest = authPaths.some((p) => originalRequest?.url?.includes(p));
+
+    if (error.response?.status === 401 && !originalRequest._retry && !isAuthRequest) {
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });

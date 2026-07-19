@@ -1,5 +1,7 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
+import { toast } from "react-toastify";
+import { useUserStore } from "@/Store/userStore";
 
 const CATEGORY_CONFIG = {
     singer: {
@@ -221,13 +223,14 @@ const CATEGORY_FILTERS = [{ id: "all", label: "All talents" }, ...Object.entries
 
 export default function Mentors() {
     const navigate = useNavigate();
+    const { userInfo } = useUserStore();
     const [query, setQuery] = useState("");
     const [category, setCategory] = useState("all");
     const [skillLevel, setSkillLevel] = useState("all");
     const [following, setFollowing] = useState(() => new Set(MENTORS.filter((m) => m.following).map((m) => m.id)));
 
     const goToProfile = (id) => {
-        navigate({ to: "/mentorProfile", params: { mentorId: id } });
+        navigate({ to: "/mentorProfile", search: { id } });
     };
 
     const filtered = useMemo(() => {
@@ -244,9 +247,18 @@ export default function Mentors() {
     }, [query, category, skillLevel]);
 
     const toggleFollow = (id) => {
+        // Guest guard: don't toggle anything; send them to login first.
+        if (!userInfo) {
+            toast.info("Log in to follow mentors");
+            navigate({ to: "/login", search: { redirect: location.href } });
+            return;
+        }
+        // NOTE: still mock — real POST /users/{id}/follow is a follow-up,
+        // blocked by the missing mentor-list endpoint (list ids are placeholders).
         setFollowing((prev) => {
             const next = new Set(prev);
-            next.has(id) ? next.delete(id) : next.add(id);
+            if (next.has(id)) next.delete(id);
+            else next.add(id);
             return next;
         });
     };

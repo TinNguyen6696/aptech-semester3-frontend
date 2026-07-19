@@ -24,6 +24,9 @@ export const API = {
     AXIOS_UPLOAD_IMAGE:`uploads/image`,
     AXIOS_UPLOAD_PROFILE_AVATAR:`/users/me/avatar`,
 
+    AXIOS_USER_GET_BY_ID:`/users/{id}`,
+    AXIOS_USER_FOLLOW:`/users/{id}/follow`,
+
     AXIOS_SEND_FORGOT_PW :`auth/forgot-password`,
     AXIOS_RESET_PW:`auth/reset-password`,
 

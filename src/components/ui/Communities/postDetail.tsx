@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { ChevronLeft, ChevronRight, ArrowLeft, Send, Heart } from "lucide-react";
-import { useRouter } from "@tanstack/react-router";
+import { useRouter, useNavigate } from "@tanstack/react-router";
 import { API } from "@/lib/apiendpoint";
 import { StringValue } from "@/lib/stringValue";
 import DateUtil from "@/lib/dateUtil";
 import axiosClient from "@/services/axiosClient";
+import { useUserStore } from "@/Store/userStore";
 import { toast } from "react-toastify";
 
 const PAGE_SIZE = 5;
@@ -109,6 +110,8 @@ function Pagination({ currentPage, totalPages, onPageChange }) {
 
 export default function PostDetail({ id, initialData }) {
     const router = useRouter();
+    const navigate = useNavigate();
+    const { userInfo } = useUserStore();
     const [post, setPost] = useState(initialData ?? null);
     const [isLoadingPost, setIsLoadingPost] = useState(!initialData);
 
@@ -175,13 +178,18 @@ export default function PostDetail({ id, initialData }) {
     }, [id, currentPage]);
 
     const handleSubmitComment = async () => {
+        // Guest guard: don't submit; send them to login first.
+        if (!userInfo) {
+            toast.info("Log in to comment");
+            navigate({ to: "/login", search: { redirect: location.href } });
+            return;
+        }
         if (!newComment.trim() || isSubmitting) return;
         setIsSubmitting(true);
         try {
             const req = {
                 Content: newComment.trim()
             }
-            console.log("check req: ", req)
             const res = await axiosClient.post(API.AXIOS_COMMUNITY_POST_COMMENT_INSERT.replace("{id}", id), req);
             if(res.data.isSuccess){
                 setNewComment("");
@@ -285,23 +293,35 @@ export default function PostDetail({ id, initialData }) {
                 </div>
             )}
 
-            <div className="bg-white border border-gray-200 rounded-xl px-4 py-3 mb-6 flex items-center gap-3">
-                <input
-                    value={newComment}
-                    onChange={(e) => setNewComment(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && handleSubmitComment()}
-                    placeholder="Write a comment…"
-                    className="flex-1 text-sm text-gray-700 placeholder:text-gray-400 outline-none"
-                />
-                <button
-                    onClick={handleSubmitComment}
-                    disabled={!newComment.trim() || isSubmitting}
-                    className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                    <Send size={14} />
-                    Send
-                </button>
-            </div>
+            {userInfo ? (
+                <div className="bg-white border border-gray-200 rounded-xl px-4 py-3 mb-6 flex items-center gap-3">
+                    <input
+                        value={newComment}
+                        onChange={(e) => setNewComment(e.target.value)}
+                        onKeyDown={(e) => e.key === "Enter" && handleSubmitComment()}
+                        placeholder="Write a comment…"
+                        className="flex-1 text-sm text-gray-700 placeholder:text-gray-400 outline-none"
+                    />
+                    <button
+                        onClick={handleSubmitComment}
+                        disabled={!newComment.trim() || isSubmitting}
+                        className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                        <Send size={14} />
+                        Send
+                    </button>
+                </div>
+            ) : (
+                <div className="bg-white border border-gray-200 rounded-xl px-4 py-3 mb-6 flex items-center justify-between gap-3">
+                    <span className="text-sm text-gray-400">Log in to join the conversation.</span>
+                    <button
+                        onClick={() => navigate({ to: "/login", search: { redirect: location.href } })}
+                        className="shrink-0 px-3 py-1.5 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors"
+                    >
+                        Log in
+                    </button>
+                </div>
+            )}
 
             <p className="text-sm font-medium text-gray-900 mb-3">
                 Comments {post?.commentCount != null ? `(${post.commentCount})` : ""}

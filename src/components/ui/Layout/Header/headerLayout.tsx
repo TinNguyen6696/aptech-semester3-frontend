@@ -5,12 +5,14 @@ import { StringValue } from '@/lib/stringValue';
 import { API } from '@/lib/apiendpoint';
 import { useUserStore } from '@/Store/userStore';
  
+const ALL_ROLES = ['guest', StringValue.MEMBER, StringValue.MENTOR, StringValue.RECRUITER, StringValue.ADMIN];
+
 const NAV_ITEMS = [
-    { label: 'Explores', href: '/explores' },
-    { label: 'Contests', href: '/contests' },
-    { label: 'Mentors', href: '/mentors' },
-    { label: 'Communities', href: '/communities' },
-    { label: 'MyVideos', href:'/myvideos'}
+    { label: 'Explores', href: '/explores', roles: ALL_ROLES },
+    { label: 'Contests', href: '/contests', roles: ALL_ROLES },
+    { label: 'Mentors', href: '/mentors', roles: ['guest', StringValue.MEMBER] },
+    { label: 'Communities', href: '/communities', roles: ALL_ROLES },
+    { label: 'MyVideos', href:'/myvideos', roles: [StringValue.MEMBER] }
 ];
 
 
@@ -26,8 +28,10 @@ export default function HeaderLayout(){
     };
 
     const { userInfo, updateUserInfo, clearUserInfo } = useUserStore();
-    const previewUrl = userInfo?.profileImageUrl 
-        ? `${API.URL}/${userInfo.profileImageUrl}` 
+    const currentRole = userInfo?.role ?? 'guest';
+    const visibleNavItems = NAV_ITEMS.filter((item) => item.roles.includes(currentRole));
+    const previewUrl = userInfo?.profileImageUrl
+        ? `${API.URL}/${userInfo.profileImageUrl}`
         : null;
 
     useEffect(() => {
@@ -41,8 +45,9 @@ export default function HeaderLayout(){
     }, []);
 
     const handleLogout = () => {
-        clearUserInfo();  
+        clearUserInfo();
         localStorage.removeItem(StringValue.ACCESS_TOKEN);
+        localStorage.removeItem(StringValue.REFRESH_TOKEN);
         setIsDropdownOpen(false);
         window.location.href = '/login';
     };
@@ -64,7 +69,7 @@ export default function HeaderLayout(){
                         <span className="font-bold text-[15px] text-gray-900">Spotlight</span>
                     </a>
                     <ul className="hidden md:flex items-center gap-6">
-                        {NAV_ITEMS.map((item) => (
+                        {visibleNavItems.map((item) => (
                             <li key={item.href}>
                                 <a
                                     href={item.href}
@@ -153,10 +158,9 @@ export default function HeaderLayout(){
                 {isMenuOpen && (
                     <div id="mobileMenu" className="md:hidden border-t border-gray-100 px-4 py-3">
                         <ul className="flex flex-col gap-3">
-                            <li><a href="/explores" className="block text-sm font-medium text-gray-600">Explores</a></li>
-                            <li><a href="/contests" className="block text-sm font-medium text-gray-600">Contests</a></li>
-                            <li><a href="/mentors" className="block text-sm font-medium text-gray-600">Mentors</a></li>
-                            <li><a href="/comunities" className="block text-sm font-medium text-gray-600">Communities</a></li>
+                            {visibleNavItems.map((item) => (
+                                <li key={item.href}><a href={item.href} className="block text-sm font-medium text-gray-600">{item.label}</a></li>
+                            ))}
                         </ul>
 
                         <div className="mt-4 pt-4 border-t border-gray-100">

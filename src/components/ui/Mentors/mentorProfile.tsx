@@ -1,4 +1,10 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import axios from "axios";
+import { useNavigate } from "@tanstack/react-router";
+import { toast } from "react-toastify";
+import { API } from "@/lib/apiendpoint";
+import axiosClient from "@/services/axiosClient";
+import { useUserStore } from "@/Store/userStore";
 
 // ---------------------------------------------------------------------------
 // Shared category config — same keys/palette as Mentors.jsx, mapped to the
@@ -135,12 +141,6 @@ const Icon = {
             <path d="M20 8v6M23 11h-6" />
         </svg>
     ),
-    Share: (props) => (
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
-            <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" />
-            <path d="M8.6 13.5 15.4 17.5M15.4 6.5 8.6 10.5" />
-        </svg>
-    ),
     Clock: (props) => (
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
             <circle cx="12" cy="12" r="10" />
@@ -188,15 +188,59 @@ export default function MentorProfile({ id }) {
     const MENTOR = useMemo(() => ALL_MENTORS.find((m) => m.id === id) ?? ALL_MENTORS[0], [id]);
     const cfg = CATEGORY_CONFIG[MENTOR.category];
 
-    const [following, setFollowing] = useState(MENTOR.following);
+    const navigate = useNavigate();
+    const { userInfo } = useUserStore();
+
+    const [following, setFollowing] = useState(false);
+    const [isTogglingFollow, setIsTogglingFollow] = useState(false);
     const [menteeCount, setMenteeCount] = useState(MENTOR.mentees);
     const [messageOpen, setMessageOpen] = useState(false);
     const [messageDraft, setMessageDraft] = useState("");
     const [messageSent, setMessageSent] = useState(false);
 
-    const toggleFollow = () => {
-        setFollowing((f) => !f);
-        setMenteeCount((c) => c + (following ? -1 : 1));
+    // Initialize follow state from the real profile response (isFollowing).
+    // isFollowing === null (anonymous) → treat as "not following".
+    useEffect(() => {
+        if (!id) return;
+        let active = true;
+        axiosClient
+            .get(API.AXIOS_USER_GET_BY_ID.replace("{id}", id))
+            .then((res) => {
+                if (active) setFollowing(res.data.data?.isFollowing ?? false);
+            })
+            .catch(() => {
+                /* keep default "not following" if the profile can't be loaded */
+            });
+        return () => { active = false; };
+    }, [id]);
+
+    const toggleFollow = async () => {
+        // Guest guard: never call the API; send them to login first.
+        if (!userInfo) {
+            toast.info("Log in to follow mentors");
+            navigate({ to: "/login", search: { redirect: location.href } });
+            return;
+        }
+        if (isTogglingFollow) return;
+        setIsTogglingFollow(true);
+        try {
+            const res = await axiosClient.post(API.AXIOS_USER_FOLLOW.replace("{id}", id));
+            if (res.data.isSuccess) {
+                // Only update state AFTER the server confirms.
+                setMenteeCount((c) => c + (following ? -1 : 1));
+                setFollowing((f) => !f);
+            } else {
+                toast.error(res.data.message || "Something went wrong");
+            }
+        } catch (error) {
+            toast.error(
+                axios.isAxiosError(error)
+                    ? error.response?.data?.message ?? "Something went wrong"
+                    : "Something went wrong"
+            );
+        } finally {
+            setIsTogglingFollow(false);
+        }
     };
 
     const sendMessage = () => {
@@ -251,12 +295,6 @@ export default function MentorProfile({ id }) {
 
                     <div className="flex items-center gap-2">
                         <button
-                            className="cursor-pointer inline-flex items-center gap-1.5 text-sm font-semibold text-gray-600 border border-gray-200 px-3.5 py-2 rounded-lg hover:bg-gray-50 transition-colors"
-                            aria-label="Share profile"
-                        >
-                            <Icon.Share /> Share
-                        </button>
-                        <button
                             onClick={() => setMessageOpen(true)}
                             className="cursor-pointer inline-flex items-center gap-1.5 text-sm font-semibold text-gray-600 border border-gray-200 px-3.5 py-2 rounded-lg hover:bg-gray-50 transition-colors"
                         >
@@ -264,6 +302,7 @@ export default function MentorProfile({ id }) {
                         </button>
                         <button
                             onClick={toggleFollow}
+                            disabled={isTogglingFollow}
                             className={`cursor-pointer inline-flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-lg transition-colors ${
                                 following ? "bg-gray-100 text-gray-700 hover:bg-gray-200" : "bg-blue-600 text-white hover:bg-blue-700"
                             }`}
