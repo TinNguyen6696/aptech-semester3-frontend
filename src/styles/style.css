@@ -224,4 +224,18 @@
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
+
+.comment-scroll::-webkit-scrollbar {
+    width: 4px;
+}
+.comment-scroll::-webkit-scrollbar-track {
+    background: transparent;
+}
+.comment-scroll::-webkit-scrollbar-thumb {
+    background: #e5e7eb;
+    border-radius: 99px;
+}
+.comment-scroll::-webkit-scrollbar-thumb:hover {
+    background: #d1d5db;
+}
   

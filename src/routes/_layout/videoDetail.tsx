@@ -1,5 +1,5 @@
 // src/routes/_layout/videoDetail.tsx
-import VideoDetail from '@/components/ui/VideoDetail/videoDetail'
+import VideoDetail from '@/components/ui/Explore/videoDetail'
 import { createFileRoute } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/_layout/videoDetail')({

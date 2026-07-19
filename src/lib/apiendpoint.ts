@@ -45,11 +45,22 @@ export const API = {
     AXIOS_VIDEO_DELETE:`/users/me/videos/{id}`,
     AXIOS_VIDEO_UPDATE:`/users/me/videos/{id}`,
 
+    AXIOS_VIDEO_TOGGLE_LIKE:`videos/{id}/like`,
+    AXIOS_VIDEO_COMMENT_GET_ALL:`videos/{id}/comments`,
+    AXIOS_VIDEO_COMMENT_INSERT:`videos/{id}/comments`,
+    AXIOS_VIDEO_COMMENT_DELETE:'comments/{id}',
+    AXIOS_VIDEO_COMMENT_UPDATE:`comments/{id}`,
+
+    AXIOS_VIDEO_VIEW_INSERT:`videos/{id}/view`,
+    AXIOS_VIDEO_REPORT_INSERT:`videos/{id}/report`,
+    AXIOS_VIDEO_RATING_INSERT:`videos/{id}/rating`,
+
+    AXIOS_VIDEO_COMMENT_TOGGLE_LIKE:`comments/{id}/like`,
+    
     AXIOS_COMMUNITY_POST_INSERT:`/communities/{id}/posts`,
 
     AXIOS_COMMUNITY_POST_COMMENT_GET_ALL:`community-posts/{id}/comments`,
     AXIOS_COMMUNITY_POST_COMMENT_INSERT:`community-posts/{id}/comments`,
-
     AXIOS_COMMUNITY_POST_COMMENT_LIKE:`community-posts/{id}/like`,
 
     AXIOS_CONTEST_INSERT:`contests`,
