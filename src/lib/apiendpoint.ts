@@ -14,7 +14,6 @@ export const API = {
     COMMUNITY_GET_ALL:`${URL_API}/communities`,
     COMMUNITY_GET_BY_ID:`${URL_API}/communities/{id}`,
     COMMUNITY_POSTS_GET_ALL: `${URL_API}/communities/{id}/posts`,
-    
 
     /* axios client */
     AXIOS_REGISTER:`auth/register`,
@@ -81,5 +80,7 @@ export const API = {
     AXIOS_OPPORTUNITIES_GET_OWN:`opportunities/mine`,
     AXIOS_OPPORTUNITIES_INSERT:`opportunities`,
     AXIOS_OPPORTUNITIES_UPDATE:`opportunities/{id}`,
-    AXIOS_OPPORTUNITIES_DELETE:`opportunities/{id}`
+    AXIOS_OPPORTUNITIES_DELETE:`opportunities/{id}`,
+
+    AXIOS_MENTORS_GET_ALL:`/users/mentors`,
 }
