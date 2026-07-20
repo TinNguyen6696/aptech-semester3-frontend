@@ -237,7 +237,7 @@ export default function CommunityBoard({ id }) {
                     </div>
                 </div>
 
-                {role !== StringValue.MEMBER && role !== StringValue.RECRUITER && (
+                {userInfo && role !== StringValue.MEMBER && role !== StringValue.RECRUITER && (
                     <button
                         onClick={() => setIsAddingPost(true)}
                         className="cursor-pointer shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors"

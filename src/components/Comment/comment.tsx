@@ -1,5 +1,6 @@
 // src/components/Comment/comment.tsx
 import { useState } from "react";
+import { useNavigate } from "@tanstack/react-router";
 import { useUserStore } from "@/Store/userStore";
 import { API } from "@/lib/apiendpoint";
 import axiosClient from "@/services/axiosClient";
@@ -7,6 +8,7 @@ import { toast } from "react-toastify";
 import DateUtil from "@/lib/dateUtil";
 
 export default function CommentItem({ comment, onDelete }) {
+    const navigate = useNavigate();
     const { userInfo } = useUserStore();
     const [isDeleting, setIsDeleting] = useState(false);
     const [isLiked, setIsLiked] = useState(comment.isLiked ?? false);
@@ -22,6 +24,11 @@ export default function CommentItem({ comment, onDelete }) {
     const initials = comment.author?.username?.slice(0, 2).toUpperCase() ?? "??";
 
     const handleToggleLike = async () => {
+        if (!userInfo) {
+            toast.info("Log in to like");
+            navigate({ to: "/login", search: { redirect: location.href } });
+            return;
+        }
         if (isLiking) return;
         setIsLiking(true);
         const next = !isLiked;

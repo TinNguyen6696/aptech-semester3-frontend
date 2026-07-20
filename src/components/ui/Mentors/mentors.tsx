@@ -76,7 +76,7 @@ export default function Mentors() {
         }
     };
 
-    const fetchMentors = async (page = 1, searchQuery = query, cat = category, skill = skillLevel) => {
+    const fetchMentors = async (page = 1, searchQuery = queryInput, cat = category, skill = skillLevel) => {
         try {
             const res = await axiosClient.get(API.AXIOS_MENTORS_GET_ALL, {
                 params: {

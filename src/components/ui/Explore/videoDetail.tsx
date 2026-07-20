@@ -1,7 +1,9 @@
 // src/pages/VideoDetail.jsx
 import { useEffect, useState, useMemo, useRef } from "react";
+import { useNavigate } from "@tanstack/react-router";
 import { useVideoDetail } from "@/hook/useVideoDetail";
 import { usePublicVideos } from "@/hook/usePublicVideo";
+import { useUserStore } from "@/Store/userStore";
 import RelatedVideoCard from "@/components/VideoComponent/relateVideoCard";
 import CommentItem from "@/components/Comment/comment";
 import axiosClient from "@/services/axiosClient";
@@ -11,6 +13,8 @@ import VideoScrollTrigger from "@/components/Trigger/videoScrollTrigger";
 import DateUtil from "@/lib/dateUtil";
 
 export default function VideoDetail({ id }) {
+    const navigate = useNavigate();
+    const { userInfo } = useUserStore();
     const { video, comments, setComments, isLoading, refetch } = useVideoDetail(id);
     const [commentText, setCommentText] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -71,6 +75,11 @@ export default function VideoDetail({ id }) {
     console.log("check video: ", video)
     //Like
     const handleToggleLike = async () => {
+        if (!userInfo) {
+            toast.info("Log in to like");
+            navigate({ to: "/login", search: { redirect: location.href } });
+            return;
+        }
         if (isLiking) return;
         setIsLiking(true);
 
@@ -95,6 +104,11 @@ export default function VideoDetail({ id }) {
         }
     };
     const handleSubmitComment = async () => {
+        if (!userInfo) {
+            toast.info("Log in to comment");
+            navigate({ to: "/login", search: { redirect: location.href } });
+            return;
+        }
         if (!commentText.trim()) return;
         setIsSubmitting(true);
         try {

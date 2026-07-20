@@ -13,6 +13,7 @@ const NAV_ITEMS = [
     { label: 'Contests', href: '/contests', roles: ALL_ROLES },
     { label: 'Mentors', href: '/mentors', roles: ['guest', StringValue.MEMBER] },
     { label: 'Communities', href: '/communities', roles: ALL_ROLES },
+    { label: 'Opportunities', href: '/opportunities', roles: ALL_ROLES },
     { label: 'MyVideos', href:'/myvideos', roles: [StringValue.MEMBER] }
 ];
 const DISMISS_KEY = "msg_badge_dismissed_until";
@@ -39,7 +40,7 @@ export default function HeaderLayout(){
     const visibleNavItems = NAV_ITEMS.filter((item) => item.roles.includes(currentRole));
     const previewUrl = userInfo?.profileImageUrl
         ? `${API.URL}/${userInfo.profileImageUrl}`
-        : `${API.URL}/${StringValue.USER_AVATAR_DEFAULT}`;
+        : StringValue.USER_AVATAR_DEFAULT;
      
     useEffect(() => {
         function handleClickOutside(event) {
@@ -59,7 +60,9 @@ export default function HeaderLayout(){
                 if (res.data.isSuccess) {
                     setUnreadCount(res.data.data ?? 0);
                 }
-            } catch {}
+            } catch (error) {
+                console.error("Failed to fetch unread message count:", error);
+            }
         };
         fetchUnread();
         const interval = setInterval(fetchUnread, 30000);

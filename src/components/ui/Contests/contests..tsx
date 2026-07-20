@@ -148,14 +148,19 @@ export default function Contests() {
     }, [activeTab, categoryFilter]);
 
     const fetchMyEntries = async () => {
-        const res = await axiosClient.get(API.AXIOS_CONTEST_ENTRIES_GET_OWN);
-        if(res.data.isSuccess){
-            setMyEntries(res?.data.data.entries ?? []);
-        };
+        if (!userInfo) return;
+        try {
+            const res = await axiosClient.get(API.AXIOS_CONTEST_ENTRIES_GET_OWN);
+            if(res.data.isSuccess){
+                setMyEntries(res?.data.data.entries ?? []);
+            };
+        } catch (error) {
+            console.error("Error fetching my entries:", error);
+        }
     }
     useEffect(()=>{
         fetchMyEntries();
-    },[]);
+    },[userInfo]);
 
 
     const selected = useMemo(() => contests?.find((c) => c.id === selectedId) ?? null, [contests, selectedId]);

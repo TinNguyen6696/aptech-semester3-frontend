@@ -7,7 +7,6 @@ import DateUtil from "@/lib/dateUtil";
 import axiosClient from "@/services/axiosClient";
 import { useUserStore } from "@/Store/userStore";
 import { toast } from "react-toastify";
-import { useUserStore } from "@/Store/userStore";
 
 const PAGE_SIZE = 5;
 
@@ -113,6 +112,7 @@ export default function PostDetail({ id, initialData }) {
     const router = useRouter();
     const navigate = useNavigate();
     const { userInfo } = useUserStore();
+    const role = userInfo?.role;
     const [post, setPost] = useState(initialData ?? null);
     const [isLoadingPost, setIsLoadingPost] = useState(!initialData);
     const [comments, setComments] = useState([]);
@@ -129,19 +129,20 @@ export default function PostDetail({ id, initialData }) {
         if (initialData) return;
         if (!id) return;
 
-        // const fetchPost = async () => {
-        //     setIsLoadingPost(true);
-        //     try {
-        //         const url = API.COMMUNITY_POST_GET_BY_ID.replace("{id}", id);
-        //         const response = await axios.get(url);
-        //         setPost(response.data.data ?? null);
-        //     } catch (error) {
-        //         console.error("Error fetching post:", error);
-        //     } finally {
-        //         setIsLoadingPost(false);
-        //     }
-        // };
-        // fetchPost();
+        const fetchPost = async () => {
+            setIsLoadingPost(true);
+            try {
+                const res = await axiosClient.get(API.AXIOS_COMMUNITY_POST_GET_BY_ID.replace("{id}", id));
+                if (res.data.isSuccess) {
+                    setPost(res.data.data ?? null);
+                }
+            } catch (error) {
+                console.error("Error fetching post:", error);
+            } finally {
+                setIsLoadingPost(false);
+            }
+        };
+        fetchPost();
     }, [id, initialData]);
 
     // Keep like state in sync if post loads/changes after initial render
@@ -205,6 +206,11 @@ export default function PostDetail({ id, initialData }) {
     };
 
     const handleToggleLike = async () => {
+        if (!userInfo) {
+            toast.info("Log in to like");
+            navigate({ to: "/login", search: { redirect: location.href } });
+            return;
+        }
         if (isLiking || !id) return;
         setIsLiking(true);
         const prevLiked = liked;

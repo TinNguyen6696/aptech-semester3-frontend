@@ -1,25 +1,24 @@
-import { Outlet, useNavigate } from "@tanstack/react-router";
+import { Outlet, redirect } from "@tanstack/react-router";
 import { createFileRoute } from "@tanstack/react-router";
 import { useUserStore } from "@/Store/userStore";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { StringValue } from "@/lib/stringValue";
 import AdminSidebar from "@/components/ui/AdminLayout/AdminSidebar/admin.sidebar";
 import AdminHeader from "@/components/ui/AdminLayout/AdminHeader/admin.header";
 
 export const Route = createFileRoute("/_layout_admin/admin")({
+    beforeLoad: () => {
+        const userInfo = useUserStore.getState().userInfo;
+        if (!userInfo || userInfo.role !== StringValue.ADMIN) {
+            throw redirect({ to: "/" });
+        }
+    },
     component: AdminLayout,
 });
 
 export default function AdminLayout() {
     const { userInfo } = useUserStore();
-    const navigate = useNavigate();
     const [collapsed, setCollapsed] = useState(false);
-
-    useEffect(() => {
-        if (!userInfo || userInfo.role !== StringValue.ADMIN) {
-            navigate({ to: "/" });
-        }
-    }, [userInfo]);
 
     return (
         <div className="flex h-screen bg-gray-50 overflow-hidden">

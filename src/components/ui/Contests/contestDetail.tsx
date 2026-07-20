@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { IconContestDetail, STATUS_CONFIG, RANK_STYLE, CATEGORY_CONFIG_DETAIL, getStatus } from "./contestCategoryConfig";
+import axios from "axios";
 import axiosClient from "@/services/axiosClient";
 import { API } from "@/lib/apiendpoint";
 import { toast } from "react-toastify";
@@ -38,20 +39,25 @@ export default function ContestDetail({ onBack, id }) {
         };
 
     useEffect(()=>{
+        if (!userInfo) return;
         const fetchOwnVideos = async ()=>{
-            const res = await axiosClient.get(API.AXIOS_VIDEO_GET_ALL);
-            if(res.data.isSuccess){
-                const mapped = (res.data.data ?? []).map((v) => ({
-                    id: v.id,
-                    videoTitle: v.title,           
-                    thumbnail: v.thumbnailUrl ?? null,         
-                    videoUrl: `${API.URL}${v.videoUrl}`, 
-                }));
-                setOwnVideos(mapped);
+            try {
+                const res = await axiosClient.get(API.AXIOS_VIDEO_GET_ALL);
+                if(res.data.isSuccess){
+                    const mapped = (res.data.data ?? []).map((v) => ({
+                        id: v.id,
+                        videoTitle: v.title,
+                        thumbnail: v.thumbnailUrl ?? null,
+                        videoUrl: `${API.URL}${v.videoUrl}`,
+                    }));
+                    setOwnVideos(mapped);
+                }
+            } catch (error) {
+                console.error("Error fetching own videos:", error);
             }
         };
         fetchOwnVideos();
-    },[])
+    },[userInfo])
 
     const handleDelete = async () => {
         if (!deletingEntryId) return;
@@ -96,6 +102,11 @@ export default function ContestDetail({ onBack, id }) {
     },[id])
 
     const handleVote = async (entryId) => {
+        if (!userInfo) {
+            toast.info("Log in to vote");
+            navigate({ to: "/login", search: { redirect: location.href } });
+            return;
+        }
         setEntries((prev) =>
             prev.map((e) =>
                 e.id === entryId
@@ -162,7 +173,11 @@ export default function ContestDetail({ onBack, id }) {
             }
            
         } catch (err) {
-            toast.error(err.response.data.message);
+            toast.error(
+                axios.isAxiosError(err) && err.response
+                    ? err.response.data?.message ?? "Something went wrong"
+                    : "Something went wrong"
+            );
         } finally {
             setSubmitting(false);
         }

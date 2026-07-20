@@ -5,7 +5,6 @@ import axiosClient from "@/services/axiosClient";
 import { API } from "@/lib/apiendpoint";
 import axios from "axios";
 import { toast } from "react-toastify";
-import { useUserStore } from "@/Store/userStore";
 import { StringValue } from "@/lib/stringValue";
 import { Icon, getOpportunityCategoryConfig   } from "./opportunityConfig";
 import { TextUtil } from "@/lib/textUtil";
@@ -35,7 +34,7 @@ const OpportunitySchema = Yup.object({
 export default function Opportunities({role}) {
     const isRecruiter = role === StringValue.RECRUITER;
     const isAdmin     = role === StringValue.ADMIN;
-    const canPost     = isRecruiter || isAdmin;
+    const canPost     = isRecruiter;
 
     // data
     const [opportunities, setOpportunities] = useState([]);
@@ -270,7 +269,7 @@ export default function Opportunities({role}) {
                 Gigs, auditions, and freelance projects matched to your talent.
                 </p>
             </div>
-            {canPost && (
+            {isRecruiter && (
                 <button
                 onClick={() => { setEditingOpp(null); formik.resetForm(); setIsFormOpen(true); }}
                 className="cursor-pointer inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-5 py-2.5 rounded-lg transition-colors shadow-sm"

@@ -59,6 +59,7 @@ export const API = {
     
     AXIOS_COMMUNITY_POST_INSERT:`/communities/{id}/posts`,
 
+    AXIOS_COMMUNITY_POST_GET_BY_ID:`community-posts/{id}`,
     AXIOS_COMMUNITY_POST_COMMENT_GET_ALL:`community-posts/{id}/comments`,
     AXIOS_COMMUNITY_POST_COMMENT_INSERT:`community-posts/{id}/comments`,
     AXIOS_COMMUNITY_POST_COMMENT_LIKE:`community-posts/{id}/like`,
