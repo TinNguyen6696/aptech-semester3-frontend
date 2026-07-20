@@ -112,17 +112,15 @@ export default function PostDetail({ id, initialData }) {
     const router = useRouter();
     const navigate = useNavigate();
     const { userInfo } = useUserStore();
+    const role = userInfo?.role;
     const [post, setPost] = useState(initialData ?? null);
     const [isLoadingPost, setIsLoadingPost] = useState(!initialData);
-
     const [comments, setComments] = useState([]);
     const [isLoadingComments, setIsLoadingComments] = useState(true);
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
-
     const [newComment, setNewComment] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
-
     const [liked, setLiked] = useState(initialData?.isLiked ?? false);
     const [likeCount, setLikeCount] = useState(initialData?.likeCount ?? 0);
     const [isLiking, setIsLiking] = useState(false);
@@ -131,19 +129,20 @@ export default function PostDetail({ id, initialData }) {
         if (initialData) return;
         if (!id) return;
 
-        // const fetchPost = async () => {
-        //     setIsLoadingPost(true);
-        //     try {
-        //         const url = API.COMMUNITY_POST_GET_BY_ID.replace("{id}", id);
-        //         const response = await axios.get(url);
-        //         setPost(response.data.data ?? null);
-        //     } catch (error) {
-        //         console.error("Error fetching post:", error);
-        //     } finally {
-        //         setIsLoadingPost(false);
-        //     }
-        // };
-        // fetchPost();
+        const fetchPost = async () => {
+            setIsLoadingPost(true);
+            try {
+                const res = await axiosClient.get(API.AXIOS_COMMUNITY_POST_GET_BY_ID.replace("{id}", id));
+                if (res.data.isSuccess) {
+                    setPost(res.data.data ?? null);
+                }
+            } catch (error) {
+                console.error("Error fetching post:", error);
+            } finally {
+                setIsLoadingPost(false);
+            }
+        };
+        fetchPost();
     }, [id, initialData]);
 
     // Keep like state in sync if post loads/changes after initial render
@@ -207,6 +206,11 @@ export default function PostDetail({ id, initialData }) {
     };
 
     const handleToggleLike = async () => {
+        if (!userInfo) {
+            toast.info("Log in to like");
+            navigate({ to: "/login", search: { redirect: location.href } });
+            return;
+        }
         if (isLiking || !id) return;
         setIsLiking(true);
         const prevLiked = liked;
@@ -276,15 +280,24 @@ export default function PostDetail({ id, initialData }) {
                     </p>
 
                     <div className="border-t border-gray-100 pt-2 flex items-center gap-4">
-                        <LikeButton
-                            liked={liked}
-                            likeCount={likeCount}
-                            onToggle={handleToggleLike}
-                            isSubmitting={isLiking}
-                        />
+
+                        {role === StringValue.RECRUITER ? (
+                            <span className="text-sm text-gray-500">
+                                {likeCount} likes
+                            </span>
+                        ) : (
+                            <LikeButton
+                                liked={liked}
+                                likeCount={likeCount}
+                                onToggle={handleToggleLike}
+                                isSubmitting={isLiking}
+                            />
+                        )}
+
                         <span className="text-sm text-gray-500">
                             {post.commentCount ?? 0} {(post.commentCount ?? 0) === 1 ? "comment" : "comments"}
                         </span>
+
                     </div>
                 </div>
             ) : (

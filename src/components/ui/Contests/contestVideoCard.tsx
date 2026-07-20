@@ -1,11 +1,13 @@
 import { useRef, useState } from "react";
 import { IconContestDetail, RANK_STYLE } from "./contestCategoryConfig";
 import { API } from "@/lib/apiendpoint";
+import { StringValue } from "@/lib/stringValue";
 
-export default function ContestVideoCard({ entry, rank, onVote, onOpen, onDelete }) {
+export default function ContestVideoCard({ entry, rank, onVote, onOpen, onDelete, role }) {
     const videoRef = useRef(null);
     const [isPlaying, setIsPlaying] = useState(false);
-
+    console.log("check entry: ", entry)
+    const isVoted = entry.isVoted;
     const playVideo = () => {
         const el = videoRef.current;
         if (!el) return;
@@ -101,22 +103,33 @@ export default function ContestVideoCard({ entry, rank, onVote, onOpen, onDelete
                     <p className="text-sm text-gray-500 mt-0.5">{entry.owner.username}</p>
                 </div>
 
-                <button
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        onVote?.(entry.id);
-                    }}
-                    disabled={entry.mine}
-                    className={`cursor-pointer flex-shrink-0 flex flex-col items-center justify-center gap-0.5 w-12 h-12 rounded-lg border font-bold transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
-                        entry.votedByMe
-                            ? "bg-blue-600 border-blue-600 text-white"
-                            : "bg-white border-gray-200 text-gray-500 hover:border-blue-300 hover:text-blue-600"
-                    }`}
-                    aria-label={entry.votedByMe ? "Remove vote" : "Vote"}
-                >
-                    <IconContestDetail.ChevronUp />
-                    <span className="text-xs">{entry.voteCount }</span>
-                </button>
+                {role !== StringValue.RECRUITER && (
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onVote?.(entry.id);
+                        }}
+                        disabled={entry.mine}
+                        className={`cursor-pointer flex-shrink-0 flex flex-col items-center justify-center gap-0.5 w-12 h-12 rounded-lg border font-bold transition-all
+                            disabled:cursor-not-allowed disabled:opacity-50
+                            ${
+                                isVoted
+                                    ? "bg-blue-600 border-blue-600 text-white shadow-md scale-105"
+                                    : "bg-white border-gray-200 text-gray-500 hover:border-blue-300 hover:text-blue-600"
+                            }
+                        `}
+                    >
+                        <IconContestDetail.ChevronUp />
+
+                        <span className="text-xs font-bold">
+                            {entry.voteCount}
+                        </span>
+
+                        <span className="text-[9px]">
+                            {isVoted ? "Voted" : "Vote"}
+                        </span>
+                    </button>
+                )}
             </div>
         </div>
     );

@@ -1,3 +1,4 @@
+
 const URL = `http://localhost:5208`;
 const URL_API = `${URL}/api`;
 const URL_API_AUTH = `${URL_API}/auth`;
@@ -13,7 +14,6 @@ export const API = {
     COMMUNITY_GET_ALL:`${URL_API}/communities`,
     COMMUNITY_GET_BY_ID:`${URL_API}/communities/{id}`,
     COMMUNITY_POSTS_GET_ALL: `${URL_API}/communities/{id}/posts`,
-    
 
     /* axios client */
     AXIOS_REGISTER:`auth/register`,
@@ -45,11 +45,23 @@ export const API = {
     AXIOS_VIDEO_DELETE:`/users/me/videos/{id}`,
     AXIOS_VIDEO_UPDATE:`/users/me/videos/{id}`,
 
+    AXIOS_VIDEO_TOGGLE_LIKE:`videos/{id}/like`,
+    AXIOS_VIDEO_COMMENT_GET_ALL:`videos/{id}/comments`,
+    AXIOS_VIDEO_COMMENT_INSERT:`videos/{id}/comments`,
+    AXIOS_VIDEO_COMMENT_DELETE:'comments/{id}',
+    AXIOS_VIDEO_COMMENT_UPDATE:`comments/{id}`,
+
+    AXIOS_VIDEO_VIEW_INSERT:`videos/{id}/view`,
+    AXIOS_VIDEO_REPORT_INSERT:`videos/{id}/reports`,
+    AXIOS_VIDEO_RATING_INSERT:`videos/{id}/rating`,
+
+    AXIOS_VIDEO_COMMENT_TOGGLE_LIKE:`comments/{id}/like`,
+    
     AXIOS_COMMUNITY_POST_INSERT:`/communities/{id}/posts`,
 
+    AXIOS_COMMUNITY_POST_GET_BY_ID:`community-posts/{id}`,
     AXIOS_COMMUNITY_POST_COMMENT_GET_ALL:`community-posts/{id}/comments`,
     AXIOS_COMMUNITY_POST_COMMENT_INSERT:`community-posts/{id}/comments`,
-
     AXIOS_COMMUNITY_POST_COMMENT_LIKE:`community-posts/{id}/like`,
 
     AXIOS_CONTEST_INSERT:`contests`,
@@ -62,4 +74,36 @@ export const API = {
     AXIOS_CONTEST_ENTRIES_INSERT:`contests/{id}/entries`,
     AXIOS_CONTEST_ENTRIES_VOTE:`contests/{id}/entries/{entryId}/vote`,
     AXIOS_CONTEST_ENTRIES_DELETE:`contests/{id}/entries/{entryId}`,
+    AXIOS_CONTEST_ENTRIES_GET_OWN:`contests/my-entries`,
+
+    AXIOS_OPPORTUNITIES_GET_ALL:`opportunities`,
+    AXIOS_OPPORTUNITIES_GET_BY_ID:`opportunities/{id}`,
+    AXIOS_OPPORTUNITIES_GET_OWN:`opportunities/mine`,
+    AXIOS_OPPORTUNITIES_INSERT:`opportunities`,
+    AXIOS_OPPORTUNITIES_UPDATE:`opportunities/{id}`,
+    AXIOS_OPPORTUNITIES_DELETE:`opportunities/{id}`,
+
+    AXIOS_MENTORS_GET_ALL:`/users/mentors`,
+
+    AXIOS_MESSAGE_INSERT:`messages`,
+    AXIOS_MESSAGE_GET_ALL:`messages/conversations`,
+    AXIOS_MESSAGE_GET_UNREAD:`messages/unread-count`,
+    AXIOS_MESSAGE_GET_BY_USER_ID:`messages/{userId}`,
+    AXIOS_MESSAGE_MARK_READ:`messages/{userId}/read`,
+
+    AXIOS_ADMIN_DASHBOARD:`admin/dashboard`,
+    AXIOS_ADMIN_USERS_GET_ALL:`admin/users`,
+    AXIOS_ADMIN_USER_GET_BY_ID:`admin/users/{id}`,
+    AXIOS_ADMIN_USER_TOGGLE_ACTIVE:`admin/users/{id}/toggle-active`,
+
+    AXIOS_ADMIN_VIDEOS_GET_ALL:`admin/videos`,
+    AXIOS_ADMIN_VIDEOS_DELETE:`admin/videos/{id}`,
+
+    AXIOS_ADMIN_COMMENTS_GET_ALL:`admin/comments`,
+
+    AXIOS_ADMIN_REPORTS_GET_ALL:`admin/reports`,
+
+    AXIOS_ADMIN_REPORT_GET_BY_ID:`admin/reports/{id}`,
+    AXIOS_ADMIN_REPORT_UPDATE_STATUS:`admin/reports/{id}/status`
+
 }

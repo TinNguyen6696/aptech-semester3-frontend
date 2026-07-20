@@ -104,7 +104,6 @@ src/
 │   └── ui/                  # shadcn/ui auto-generated components (do not edit)
 ├── hooks/                   # Shared custom hooks
 ├── lib/
-│   ├── axios.ts             # Axios instance (base URL + interceptors)
 │   └── utils.ts             # Utility functions (cn helper)
 ├── routes/                  # TanStack Router file-based routes
 │   ├── __root.tsx           # Root layout (wraps entire app)

@@ -177,149 +177,7 @@ export default function Explores(){
                         <p className="text-center text-sm text-gray-400 py-8">No videos found</p>
                     )}
                 </div>
-            </section>
-
-            <section className="px-6 sm:px-10 py-10 bg-white">
-                <div className="max-w-7xl mx-auto">
-
-                    <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-blue-600 to-indigo-700 p-8 sm:p-10">
-                    <div className="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-8 items-center">
-
-                        <div>
-                        <span className="inline-flex items-center gap-1.5 bg-white/15 text-white text-xs font-semibold px-3 py-1.5 rounded-full backdrop-blur-sm">
-                            🏆 THIS WEEK'S CHALLENGE
-                        </span>
-
-                        <h2 className="mt-4 text-2xl sm:text-3xl font-extrabold text-white">
-                            "60-Second Solo" Contest
-                        </h2>
-
-                        <p className="mt-3 text-blue-100 text-sm leading-relaxed max-w-md">
-                            Show your best in under a minute. Community-voted, judged by guest pros. Winners get featured + prizes.
-                        </p>
-
-                        <div className="mt-6 flex items-center gap-3">
-                            <button className="bg-white hover:bg-gray-100 text-blue-700 text-sm font-semibold px-5 py-2.5 rounded-lg transition-colors">
-                            Enter now
-                            </button>
-                            <button className="bg-transparent hover:bg-white/10 text-white text-sm font-semibold px-5 py-2.5 rounded-lg border border-white/40 transition-colors">
-                            See entries
-                            </button>
-                        </div>
-                        </div>
-
-                        <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
-                        <div className="flex items-center justify-between mb-3">
-                            <span className="text-white text-sm font-semibold">Live leaderboard</span>
-                            <span className="text-blue-200 text-xs">2d left</span>
-                        </div>
-
-                        <div className="space-y-2">
-                            <div className="flex items-center justify-between bg-white/15 rounded-lg px-3.5 py-2.5">
-                            <span className="text-white text-sm font-medium">#1  Maya Johnson</span>
-                            <span className="text-white text-sm font-semibold">9,841</span>
-                            </div>
-                            <div className="flex items-center justify-between bg-white/10 rounded-lg px-3.5 py-2.5">
-                            <span className="text-blue-50 text-sm font-medium">#2  Dev Kapoor</span>
-                            <span className="text-blue-50 text-sm font-semibold">8,302</span>
-                            </div>
-                            <div className="flex items-center justify-between bg-white/10 rounded-lg px-3.5 py-2.5">
-                            <span className="text-blue-50 text-sm font-medium">#3  Nadia Ahmed</span>
-                            <span className="text-blue-50 text-sm font-semibold">7,658</span>
-                            </div>
-                        </div>
-                        </div>
-
-                    </div>
-                    </div>
-
-                    <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-                    <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-6">
-                        <div className="flex items-center gap-3">
-                        <span className="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center text-lg">
-                            👥
-                        </span>
-                        <h3 className="text-base font-bold text-gray-900">Communities &amp; groups</h3>
-                        </div>
-
-                        <p className="mt-3 text-sm text-gray-500 leading-relaxed">
-                        Join interest-based groups, share ideas on discussion boards, and team up for collabs.
-                        </p>
-
-                        <div className="mt-5 space-y-2">
-                        <div className="flex items-center justify-between px-4 py-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer">
-                            <span className="text-sm font-medium text-gray-800">Bedroom Producers</span>
-                            <span className="text-xs text-gray-400">12,400 members</span>
-                        </div>
-                        <div className="flex items-center justify-between px-4 py-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer">
-                            <span className="text-sm font-medium text-gray-800">Street Dance Crew</span>
-                            <span className="text-xs text-gray-400">9,120 members</span>
-                        </div>
-                        <div className="flex items-center justify-between px-4 py-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer">
-                            <span className="text-sm font-medium text-gray-800">Daily Sketch Club</span>
-                            <span className="text-xs text-gray-400">7,030 members</span>
-                        </div>
-                        </div>
-
-                        <a href="#" className="mt-4 inline-block text-sm font-semibold text-blue-600 hover:text-blue-700">
-                        Browse all communities →
-                        </a>
-                    </div>
-
-                    <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-6">
-                        <div className="flex items-center gap-3">
-                        <span className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center text-lg">
-                            🎓
-                        </span>
-                        <h3 className="text-base font-bold text-gray-900">Mentors &amp; scouts</h3>
-                        </div>
-
-                        <p className="mt-3 text-sm text-gray-500 leading-relaxed">
-                        Book sessions with industry pros, or open your profile to scouts hiring for gigs and auditions.
-                        </p>
-
-                        <div className="mt-5 space-y-2">
-                        <div className="flex items-center justify-between px-4 py-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer">
-                            <div className="flex items-center gap-3">
-                            <span className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-[10px] font-bold text-white shrink-0">
-                                JL
-                            </span>
-                            <div>
-                                <p className="text-sm font-medium text-gray-800">Jordan Lee · Music producer</p>
-                                <p className="text-xs text-gray-400">Grammy-nominated · 4.9★</p>
-                            </div>
-                            </div>
-                            <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full shrink-0">
-                            Open
-                            </span>
-                        </div>
-
-                        <div className="flex items-center justify-between px-4 py-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer">
-                            <div className="flex items-center gap-3">
-                            <span className="w-8 h-8 rounded-full bg-red-400 flex items-center justify-center text-[10px] font-bold text-white shrink-0">
-                                RW
-                            </span>
-                            <div>
-                                <p className="text-sm font-medium text-gray-800">Riya Walsh · Talent scout</p>
-                                <p className="text-xs text-gray-400">Hiring dancers · 4.8★</p>
-                            </div>
-                            </div>
-                            <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full shrink-0">
-                            Hiring
-                            </span>
-                        </div>
-                        </div>
-
-                        <a href="#" className="mt-4 inline-block text-sm font-semibold text-blue-600 hover:text-blue-700">
-                        Find a mentor →
-                        </a>
-                    </div>
-
-                    </div>
-
-                </div>
-            </section>
+            </section>   
             <section className="px-6 sm:px-10 py-16 bg-white">
                 <div className="max-w-7xl mx-auto">
 
@@ -380,7 +238,7 @@ export default function Explores(){
 
                     </div>
                 </div>
-                </section>
+              </section>      
         </>
     )
 }

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { IconContestDetail, STATUS_CONFIG, RANK_STYLE, CATEGORY_CONFIG_DETAIL, getStatus } from "./contestCategoryConfig";
+import axios from "axios";
 import axiosClient from "@/services/axiosClient";
 import { API } from "@/lib/apiendpoint";
 import { toast } from "react-toastify";
@@ -12,8 +13,12 @@ import WinnerPodium from "./contestWinnerPodium";
 import SubmitEntryModal from "./contestSubmitEntryModal";
 import VideoExpandModal from "./videoExpandModal";
 import DateUtil from "@/lib/dateUtil";
+import { useUserStore } from "@/Store/userStore";
+import { StringValue } from "@/lib/stringValue";
 
 export default function ContestDetail({ onBack, id }) {
+    const {userInfo} = useUserStore();
+    const role = userInfo?.role;
     const navigate = useNavigate();
     const [contest, setContest] = useState<any>(null);
     const [ownVideos, setOwnVideos] = useState([]);
@@ -34,20 +39,25 @@ export default function ContestDetail({ onBack, id }) {
         };
 
     useEffect(()=>{
+        if (!userInfo) return;
         const fetchOwnVideos = async ()=>{
-            const res = await axiosClient.get(API.AXIOS_VIDEO_GET_ALL);
-            if(res.data.isSuccess){
-                const mapped = (res.data.data ?? []).map((v) => ({
-                    id: v.id,
-                    videoTitle: v.title,           
-                    thumbnail: v.thumbnailUrl ?? null,         
-                    videoUrl: `${API.URL}${v.videoUrl}`, 
-                }));
-                setOwnVideos(mapped);
+            try {
+                const res = await axiosClient.get(API.AXIOS_VIDEO_GET_ALL);
+                if(res.data.isSuccess){
+                    const mapped = (res.data.data ?? []).map((v) => ({
+                        id: v.id,
+                        videoTitle: v.title,
+                        thumbnail: v.thumbnailUrl ?? null,
+                        videoUrl: `${API.URL}${v.videoUrl}`,
+                    }));
+                    setOwnVideos(mapped);
+                }
+            } catch (error) {
+                console.error("Error fetching own videos:", error);
             }
         };
         fetchOwnVideos();
-    },[])
+    },[userInfo])
 
     const handleDelete = async () => {
         if (!deletingEntryId) return;
@@ -92,12 +102,19 @@ export default function ContestDetail({ onBack, id }) {
     },[id])
 
     const handleVote = async (entryId) => {
+        if (!userInfo) {
+            toast.info("Log in to vote");
+            navigate({ to: "/login", search: { redirect: location.href } });
+            return;
+        }
         setEntries((prev) =>
             prev.map((e) =>
                 e.id === entryId
-                    ? { ...e, votedByMe: !e.votedByMe, voteCount: e.votedByMe 
-                    ? e.voteCount + 1
-                    : e.voteCount - 1 }
+                    ? {  ...e,
+                        isVoted: !e.isVoted,
+                        voteCount: e.isVoted
+                            ? e.voteCount - 1
+                            : e.voteCount + 1}
                     : e
             )
         );
@@ -116,7 +133,11 @@ export default function ContestDetail({ onBack, id }) {
             setEntries((prev) =>
                 prev.map((e) =>
                     e.id === entryId
-                        ? { ...e, votedByMe: !e.votedByMe, voteCount: e.voteCount + (e.votedByMe ? -1 : 1) }
+                        ? {...e,
+                            isVoted: !e.isVoted,
+                            voteCount: e.isVoted
+                                ? e.voteCount - 1
+                                : e.voteCount + 1}
                         : e
                 )
             );
@@ -152,7 +173,11 @@ export default function ContestDetail({ onBack, id }) {
             }
            
         } catch (err) {
-            toast.error(err.response.data.message);
+            toast.error(
+                axios.isAxiosError(err) && err.response
+                    ? err.response.data?.message ?? "Something went wrong"
+                    : "Something went wrong"
+            );
         } finally {
             setSubmitting(false);
         }
@@ -207,25 +232,27 @@ export default function ContestDetail({ onBack, id }) {
                         </div>
                     </div>
 
-                    <button
-                        onClick={handleOpenSubmitModal}
-                        disabled={hasSubmitted || isEnded || statusKey === "upcoming"}
-                        className={`cursor-pointer flex-shrink-0 inline-flex items-center gap-1.5 text-sm font-semibold px-4 py-2.5 rounded-lg shadow-sm transition-colors ${
-                            hasSubmitted || isEnded || statusKey === "upcoming"
-                                ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                                : "bg-blue-600 hover:bg-blue-700 text-white"
-                        }`}
-                    >
-                        {hasSubmitted ? (
-                            <><IconContestDetail.Check className="w-4 h-4" /> You've submitted</>
-                        ) : isEnded ? (
-                            "Contest ended"
-                        ) : statusKey === "upcoming" ? (
-                            "Not open yet"
-                        ) : (
-                            "Submit your video"
-                        )}
-                    </button>
+                    {role !== StringValue.RECRUITER && (
+                        <button
+                            onClick={handleOpenSubmitModal}
+                            disabled={hasSubmitted || isEnded || statusKey === "upcoming"}
+                            className={`cursor-pointer flex-shrink-0 inline-flex items-center gap-1.5 text-sm font-semibold px-4 py-2.5 rounded-lg shadow-sm transition-colors ${
+                                hasSubmitted || isEnded || statusKey === "upcoming"
+                                    ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                                    : "bg-blue-600 hover:bg-blue-700 text-white"
+                            }`}
+                        >
+                            {hasSubmitted ? (
+                                <><IconContestDetail.Check className="w-4 h-4" /> You've submitted</>
+                            ) : isEnded ? (
+                                "Contest ended"
+                            ) : statusKey === "upcoming" ? (
+                                "Not open yet"
+                            ) : (
+                                "Submit your video"
+                            )}
+                        </button>
+                    )}
                 </div>
                 {statusKey === "upcoming" && contest?.startDate && (
                     <UpcomingBanner startDate={contest.startDate} endDate={contest.endDate} />
@@ -245,6 +272,7 @@ export default function ContestDetail({ onBack, id }) {
                                         onVote={handleVote}
                                         onOpen={setOpenedEntry}
                                         onDelete={setDeletingEntryId}
+                                        role={role}
                                     />
                                 ))}
                             </div>
