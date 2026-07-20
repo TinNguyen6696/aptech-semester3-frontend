@@ -68,6 +68,11 @@ export default function VideoSelectCard({ video, isSelected, onSelect, onExpand 
             <div className="flex items-center gap-3 px-4 py-3">
                 <div className="min-w-0 flex-1">
                     <p className="text-sm font-semibold text-gray-900 truncate">{video.videoTitle}</p>
+                    {video.category && (
+                        <span className="inline-flex items-center mt-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-50 text-blue-700">
+                            {video.category}
+                        </span>
+                    )}
                 </div>
 
                 {/* Radio-style select */}

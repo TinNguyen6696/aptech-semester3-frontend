@@ -49,6 +49,8 @@ export default function ContestDetail({ onBack, id }) {
                         videoTitle: v.title,
                         thumbnail: v.thumbnailUrl ?? null,
                         videoUrl: `${API.URL}${v.videoUrl}`,
+                        category: v.category,
+                        visibility: v.visibility,
                     }));
                     setOwnVideos(mapped);
                 }
@@ -232,7 +234,7 @@ export default function ContestDetail({ onBack, id }) {
                         </div>
                     </div>
 
-                    {role !== StringValue.RECRUITER && (
+                    {role === StringValue.MEMBER && (
                         <button
                             onClick={handleOpenSubmitModal}
                             disabled={hasSubmitted || isEnded || statusKey === "upcoming"}
@@ -315,7 +317,7 @@ export default function ContestDetail({ onBack, id }) {
             <SubmitEntryModal
                 open={showSubmitModal}
                 onClose={handleCloseSubmitModal}
-                myVideos={ownVideos}
+                myVideos={ownVideos.filter((v) => v.visibility === StringValue.TYPE_VIDEO_PUBLIC)}
                 loading={false}
                 selectedVideoId={selectedVideoId}
                 onSelect={setSelectedVideoId}

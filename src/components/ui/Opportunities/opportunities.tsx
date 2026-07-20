@@ -29,6 +29,10 @@ const OpportunitySchema = Yup.object({
   category:   Yup.string().required("Please choose a category"),
   description:Yup.string().trim().required("Description is required"),
   province_id:Yup.number().required("Please select a province"),
+  posted_at:  Yup.date().required("Posted date is required"),
+  expires_at: Yup.date()
+    .required("Expiry date is required")
+    .test("is-future", "Expiry date must be in the future.", (value) => !!value && value.getTime() > Date.now()),
 });
 
 export default function Opportunities({role}) {
@@ -181,6 +185,8 @@ export default function Opportunities({role}) {
         category:    editingOpp?.category    ?? "",
         description: editingOpp?.description ?? "",
         province_id: editingOpp?.provinceId  ?? "",
+        posted_at:   editingOpp?.postedAt  ? editingOpp.postedAt.substring(0, 10)  : "",
+        expires_at:  editingOpp?.expiresAt ? editingOpp.expiresAt.substring(0, 10) : "",
         },
         validationSchema: OpportunitySchema,
         onSubmit: async (values, { setSubmitting, resetForm }) => {
@@ -189,6 +195,8 @@ export default function Opportunities({role}) {
             Category:    values.category,
             Description: values.description.trim(),
             ProvinceId:  Number(values.province_id),
+            PostedAt:    new Date(values.posted_at).toISOString(),
+            ExpiresAt:   new Date(values.expires_at).toISOString(),
         };
         try {
             const api = editingOpp
@@ -209,7 +217,8 @@ export default function Opportunities({role}) {
             }
         } catch (e) {
             console.error(e);
-            toast.error("Could not save opportunity. Please try again.");
+            const message = axios.isAxiosError(e) ? e.response?.data?.message : null;
+            toast.error(message || "Could not save opportunity. Please try again.");
         } finally {
             setSubmitting(false);
         }
@@ -324,6 +333,17 @@ export default function Opportunities({role}) {
                 className="w-full rounded-lg border border-gray-200 pl-9 pr-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500"
                 />
             </div>
+
+            <select
+                value={provinceFilter ?? ""}
+                onChange={(e) => setProvinceFilter(e.target.value ? Number(e.target.value) : null)}
+                className="w-full sm:w-56 cursor-pointer rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500 bg-white"
+            >
+                <option value="">All provinces</option>
+                {provinces.map((prov) => (
+                <option key={prov.id} value={prov.id}>{prov.name}</option>
+                ))}
+            </select>
             </div>
 
             {/* Category pills */}
@@ -353,33 +373,6 @@ export default function Opportunities({role}) {
             })}
             </div>
 
-            {/* Province pills */}
-            {provinces.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 mb-6">
-                <button
-                onClick={() => setProvinceFilter(null)}
-                className={`cursor-pointer px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${
-                    provinceFilter === null ? "bg-gray-900 text-white border-gray-900" : "bg-white text-gray-500 border-gray-200 hover:bg-gray-50"
-                }`}
-                >
-                All provinces
-                </button>
-                {provinces.slice(0, 10).map((prov) => {
-                const active = provinceFilter === prov.id;
-                return (
-                    <button
-                    key={prov.id}
-                    onClick={() => setProvinceFilter(active ? null : prov.id)}
-                    className={`cursor-pointer px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${
-                        active ? "bg-blue-600 text-white border-blue-600" : "bg-white text-gray-500 border-gray-200 hover:bg-gray-50"
-                    }`}
-                    >
-                    📍 {prov.name}
-                    </button>
-                );
-                })}
-            </div>
-            )}
 
             {/* ── Grid ── */}
             {isLoading ? (
@@ -396,10 +389,10 @@ export default function Opportunities({role}) {
                     <div
                     key={opp.id}
                     onClick={() => setSelectedOpp(opp)}
-                    className="cursor-pointer border border-gray-100 rounded-2xl p-5 flex flex-col gap-3 hover:shadow-sm hover:border-gray-200 transition-all"
+                    className={`cursor-pointer border border-gray-100 rounded-2xl p-5 flex flex-col gap-3 hover:shadow-sm hover:border-gray-200 transition-all ${opp.isExpired ? "opacity-50" : ""}`}
                     >
                     <div className="flex items-start justify-between">
-                        <div className={`w-10 h-10 rounded-lg ${cfg.iconBg} flex items-center justify-center text-lg`}>
+                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-lg ${opp.isExpired ? "bg-gray-100 grayscale" : cfg.iconBg}`}>
                         {cfg.emoji}
                         </div>
 
@@ -437,7 +430,9 @@ export default function Opportunities({role}) {
                     {/* title + badge */}
                     <div>
                         <h3 className="text-sm font-bold text-gray-900 line-clamp-2">{opp.title}</h3>
-                        <span className={`inline-flex mt-1.5 items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${cfg.badgeBg} ${cfg.badgeColor}`}>
+                        <span className={`inline-flex mt-1.5 items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${
+                            opp.isExpired ? "bg-gray-100 text-gray-500" : `${cfg.badgeBg} ${cfg.badgeColor}`
+                        }`}>
                         {cfg.label}
                         </span>
                     </div>
@@ -457,9 +452,9 @@ export default function Opportunities({role}) {
                             <Icon.Briefcase /> {opp.postedBy.username}
                         </span>
                         )}
-                        {opp.createdAt && (
+                        {opp.postedAt && (
                         <span className="inline-flex items-center gap-1">
-                            <Icon.Clock /> {new Date(opp.createdAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}
+                            <Icon.Clock /> {new Date(opp.postedAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}
                         </span>
                         )}
                     </div>
@@ -547,13 +542,15 @@ export default function Opportunities({role}) {
                     {/* header */}
                     <div className="flex items-start justify-between gap-3">
                     <div className="flex items-start gap-3">
-                        <div className={`w-12 h-12 rounded-xl ${cfg.iconBg} flex items-center justify-center text-xl shrink-0`}>
+                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-xl shrink-0 ${selectedOpp.isExpired ? "bg-gray-100 grayscale" : cfg.iconBg}`}>
                         {cfg.emoji}
                         </div>
                         <div>
                         <h3 className="text-base font-bold text-gray-900">{selectedOpp.title}</h3>
                         <div className="flex items-center gap-2 mt-1 flex-wrap">
-                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${cfg.badgeBg} ${cfg.badgeColor}`}>
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${
+                                selectedOpp.isExpired ? "bg-gray-100 text-gray-500" : `${cfg.badgeBg} ${cfg.badgeColor}`
+                            }`}>
                             {cfg.label}
                             </span>
                             {selectedOpp.provinceName && (
@@ -584,16 +581,22 @@ export default function Opportunities({role}) {
                     {/* footer */}
                     <div className="mt-6 flex items-center justify-between">
                     <span className="text-xs text-gray-400">
-                        {selectedOpp.createdAt && new Date(selectedOpp.createdAt).toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" })}
+                        {selectedOpp.postedAt && `Posted ${new Date(selectedOpp.postedAt).toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" })}`}
+                        {selectedOpp.expiresAt && ` · Expires ${new Date(selectedOpp.expiresAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}`}
                     </span>
                     {!isRecruiter && !isAdmin &&(
                         <button
                             onClick={() => {
                             toast.info("Messaging this recruiter — coming soon!");
                             }}
-                            className="cursor-pointer inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
+                            disabled={selectedOpp.isExpired}
+                            className={`inline-flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-lg transition-colors ${
+                                selectedOpp.isExpired
+                                    ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                                    : "cursor-pointer bg-blue-600 hover:bg-blue-700 text-white"
+                            }`}
                         >
-                            Contact recruiter <Icon.ExternalLink />
+                            {selectedOpp.isExpired ? "Opportunity expired" : (<>Contact recruiter <Icon.ExternalLink /></>)}
                         </button>
                     )}
                     </div>
@@ -686,6 +689,39 @@ export default function Opportunities({role}) {
                     </select>
                     {formik.touched.province_id && formik.errors.province_id && (
                     <p className="text-red-500 text-xs mt-1">{formik.errors.province_id}</p>
+                    )}
+                </div>
+
+                {/* Posted date */}
+                <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Posted date</label>
+                    <input
+                    name="posted_at"
+                    type="date"
+                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500 bg-white"
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    value={formik.values.posted_at}
+                    />
+                    {formik.touched.posted_at && formik.errors.posted_at && (
+                    <p className="text-red-500 text-xs mt-1">{formik.errors.posted_at}</p>
+                    )}
+                </div>
+
+                {/* Expires on */}
+                <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Expires on</label>
+                    <input
+                    name="expires_at"
+                    type="date"
+                    min={new Date().toISOString().split("T")[0]}
+                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500 bg-white"
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    value={formik.values.expires_at}
+                    />
+                    {formik.touched.expires_at && formik.errors.expires_at && (
+                    <p className="text-red-500 text-xs mt-1">{formik.errors.expires_at}</p>
                     )}
                 </div>
 
