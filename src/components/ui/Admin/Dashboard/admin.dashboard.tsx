@@ -41,15 +41,6 @@ interface DashboardStats {
     };
 }
 
-// ── Recent users mock ─────────────────────────────────────────────────────────
-const MOCK_RECENT_USERS = Array.from({ length: 5 }, (_, i) => ({
-    id: i + 1,
-    name: ["Alice Smith", "Bob Johnson", "Carol Williams", "David Brown", "Eva Jones"][i],
-    email: `user${i + 1}@example.com`,
-    role: ["member", "mentor", "member", "recruiter", "member"][i],
-    createdAt: new Date(Date.now() - i * 86400000).toISOString(),
-}));
-
 const ROLE_COLOR: Record<string, string> = {
     member: "blue",
     mentor: "purple",
@@ -57,7 +48,6 @@ const ROLE_COLOR: Record<string, string> = {
     admin: "red",
 };
 
-// ── Stat Card ─────────────────────────────────────────────────────────────────
 function StatCard({
     title,
     value,
@@ -149,7 +139,7 @@ export default function AdminDashboard() {
     const recentUsersColumns = [
         {
             title: "Name",
-            dataIndex: "name",
+            dataIndex: "username",
             key: "name",
             render: (name: string) => <span className="text-sm font-medium text-gray-800">{name}</span>,
         },
@@ -163,9 +153,12 @@ export default function AdminDashboard() {
             title: "Role",
             dataIndex: "role",
             key: "role",
-            render: (role: string) => (
-                <Tag color={ROLE_COLOR[role]} className="capitalize text-xs">{role}</Tag>
-            ),
+            render: (role: string) => {
+                const color = ROLE_COLOR[role?.toLowerCase()];
+                return (
+                    <Tag color={color} className="capitalize text-xs">{role}</Tag>
+                )
+            },
         },
         {
             title: "Joined",
@@ -196,7 +189,7 @@ export default function AdminDashboard() {
                     <StatCard title="Total Videos" value={dashBoard?.totalVideos ?? 0} icon={<VideoCameraOutlined />} color="#7c3aed" loading={loading} />
                 </Col>
                 <Col xs={24} sm={12} lg={8}>
-                    <StatCard title="Total Views" value={dashBoard?.totalVideos ?? 0} icon={<RiseOutlined />} color="#0891b2" loading={loading} />
+                    <StatCard title="Total Views" value={dashBoard?.totalViews ?? 0} icon={<RiseOutlined />} color="#0891b2" loading={loading} />
                 </Col>
                 <Col xs={24} sm={12} lg={8}>
                     <StatCard title="Community Posts" value={dashBoard?.totalCommunityPosts ?? 0} icon={<TeamOutlined />} color="#059669" loading={loading} />
@@ -282,7 +275,7 @@ export default function AdminDashboard() {
             >
                 <Table
                     columns={recentUsersColumns}
-                    dataSource={MOCK_RECENT_USERS}
+                    dataSource={dashBoard?.recentUsers}
                     rowKey="id"
                     pagination={false}
                     size="small"

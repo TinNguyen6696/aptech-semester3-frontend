@@ -1,11 +1,10 @@
 import { useRef, useState } from "react";
-import { IconContestDetail } from "./contestCategoryConfig";
-
+import { IconContestDetail,getSingleCategoryConfig } from "./contestCategoryConfig";
 
 export default function VideoSelectCard({ video, isSelected, onSelect, onExpand }) {
     const videoRef = useRef(null);
     const [playing, setPlaying] = useState(false);
-
+    const catConfig = video.category ? getSingleCategoryConfig(video.category) : null;
     const togglePlay = (e) => {
         e.stopPropagation();
         const el = videoRef.current;
@@ -18,7 +17,6 @@ export default function VideoSelectCard({ video, isSelected, onSelect, onExpand 
             setPlaying(true);
         }
     };
-
     return (
         <div className={`rounded-2xl border-2 transition-all overflow-hidden ${
             isSelected ? "border-blue-600 bg-blue-50/30" : "border-gray-100 bg-white hover:border-gray-200"
@@ -35,6 +33,11 @@ export default function VideoSelectCard({ video, isSelected, onSelect, onExpand 
                     preload="metadata"
                     onEnded={() => setPlaying(false)}
                 />
+                {catConfig && (
+                    <span className={`absolute top-2 left-2 px-2 py-0.5 rounded-full text-[10px] font-semibold ${catConfig.badgeBg} ${catConfig.badgeColor} backdrop-blur-sm`}>
+                        {catConfig.label}
+                    </span>
+                )}
                 <button
                     type="button"
                     onClick={togglePlay}
@@ -53,7 +56,6 @@ export default function VideoSelectCard({ video, isSelected, onSelect, onExpand 
                     </div>
                 </button>
 
-                {/* Expand / fullscreen button */}
                 <button
                     type="button"
                     onClick={(e) => { e.stopPropagation(); onExpand?.(video); }}
@@ -68,11 +70,6 @@ export default function VideoSelectCard({ video, isSelected, onSelect, onExpand 
             <div className="flex items-center gap-3 px-4 py-3">
                 <div className="min-w-0 flex-1">
                     <p className="text-sm font-semibold text-gray-900 truncate">{video.videoTitle}</p>
-                    {video.category && (
-                        <span className="inline-flex items-center mt-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-50 text-blue-700">
-                            {video.category}
-                        </span>
-                    )}
                 </div>
 
                 {/* Radio-style select */}

@@ -27,6 +27,9 @@ export const API = {
     AXIOS_USER_GET_BY_ID:`/users/{id}`,
     AXIOS_USER_FOLLOW:`/users/{id}/follow`,
 
+    AXIOS_USER_GET_FOLLOWING:`users/{id}/following`,
+    AXIOS_USER_GET_FOLLOWER:`users/{id}/followers`,
+
     AXIOS_SEND_FORGOT_PW :`auth/forgot-password`,
     AXIOS_RESET_PW:`auth/reset-password`,
 
@@ -104,6 +107,10 @@ export const API = {
     AXIOS_ADMIN_REPORTS_GET_ALL:`admin/reports`,
 
     AXIOS_ADMIN_REPORT_GET_BY_ID:`admin/reports/{id}`,
-    AXIOS_ADMIN_REPORT_UPDATE_STATUS:`admin/reports/{id}/status`
+    AXIOS_ADMIN_REPORT_UPDATE_STATUS:`admin/reports/{id}/status`,
+
+    AXIOS_NOTIFICATIONS_GET_ALL:`notifications`,
+    AXIOS_NOTIFICATIONS_READ:`notifications/{id}/read`,
+    AXIOS_NOTIFICATIONS_READ_ALL:`notification/read-all`
 
 }

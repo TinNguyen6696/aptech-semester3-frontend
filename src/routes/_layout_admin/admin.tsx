@@ -17,7 +17,7 @@ export const Route = createFileRoute("/_layout_admin/admin")({
 });
 
 export default function AdminLayout() {
-    const { userInfo } = useUserStore();
+    const { userInfo, clearUserInfo  } = useUserStore();
     const [collapsed, setCollapsed] = useState(false);
 
     return (
@@ -29,6 +29,7 @@ export default function AdminLayout() {
                     collapsed={collapsed}
                     onToggle={() => setCollapsed((v) => !v)}
                     userInfo={userInfo}
+                    clearUserInfo = {clearUserInfo}
                 />
                 <main className="flex-1 overflow-y-auto p-4 md:p-6">
                     <Outlet />

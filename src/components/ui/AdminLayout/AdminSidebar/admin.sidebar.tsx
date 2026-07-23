@@ -1,5 +1,6 @@
 import { HomeOutlined, LogoutOutlined } from "@ant-design/icons";
-import { useState } from "react";
+import { useUserStore,  } from "@/Store/userStore";
+import { StringValue } from "@/lib/stringValue";
 
 const NAV_ITEMS = [
     { label: "Dashboard", href: "/admin", icon: "▦" },
@@ -14,7 +15,19 @@ interface Props {
     collapsed: boolean;
 }
 
+
+
 export default function AdminSidebar({ collapsed }: Props) {
+    const {userInfo, clearUserInfo} = useUserStore();
+
+    const handleLogout = () => {
+        clearUserInfo();
+        localStorage.removeItem(StringValue.ACCESS_TOKEN);
+        localStorage.removeItem(StringValue.REFRESH_TOKEN);
+        window.location.href = '/login';
+    };
+
+
     return (
         <aside className={`
             flex-shrink-0 bg-white border-r border-gray-100 flex flex-col
@@ -59,7 +72,7 @@ export default function AdminSidebar({ collapsed }: Props) {
                     {!collapsed && <span>Back to site</span>}
                 </a>
                 <button
-                    onClick={() => {/* TODO: logout */}}
+                    onClick={() => {handleLogout()}}
                     className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-red-500 hover:bg-red-50 transition-colors"
                     title={collapsed ? "Logout" : undefined}
                 >

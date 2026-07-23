@@ -4,6 +4,10 @@ import { useState, useEffect } from "react";
 import { usePublicVideos } from "@/hook/usePublicVideo";
 import VideoScrollTrigger from "@/components/Trigger/videoScrollTrigger";
 import PublicVideoCard from "@/components/VideoComponent/publicVideoCard";
+import { toast } from "react-toastify";
+import { useNavigate } from "@tanstack/react-router";
+import { useUserStore } from "@/Store/userStore";
+import axiosClient from "@/services/axiosClient";
 
 
 const CATEGORY_CONFIG = {
@@ -18,10 +22,13 @@ const CATEGORY_CONFIG = {
 
 
 export default function Explores(){
+    const navigate = useNavigate();
+    const {userInfo} = useUserStore();
     const [options, setOptions] = useState([]);
     const [selectedCategory, setSelectedCategory] = useState("All");
     const { videos, isLoading, hasMore, loadMore } = usePublicVideos(selectedCategory);
-
+    const [following, setFollowing] = useState(() => new Set());
+    const [loadingFollow, setLoadingFollow] = useState(() => new Set());
     useEffect(() => {
       const fetchOptions = async () => {
         try {
@@ -36,6 +43,44 @@ export default function Explores(){
     }, [])  
 
     console.log("check options: ", options)
+
+    const toggleFollow = async (id) => {
+        if (!userInfo) {
+            toast.info("Log in to follow mentors");
+            navigate({ to: "/login", search: { redirect: location.href } });
+            return;
+        }
+
+        const isCurrentlyFollowing = following.has(id);
+
+        setFollowing((prev) => {
+            const next = new Set(prev);
+            isCurrentlyFollowing ? next.delete(id) : next.add(id);
+            return next;
+        });
+        setLoadingFollow((prev) => new Set(prev).add(id));
+
+        try {
+            const res = await axiosClient.post(API.AXIOS_USER_FOLLOW.replace("{id}", id));
+            if (res.data.isSuccess) {
+                console.log("follow success.");
+            }
+        } catch {
+            setFollowing((prev) => {
+                const next = new Set(prev);
+                isCurrentlyFollowing ? next.add(id) : next.delete(id);
+                return next;
+            });
+            toast.error("Failed to update follow status");
+        } finally {
+            setLoadingFollow((prev) => {
+                const next = new Set(prev);
+                next.delete(id);
+                return next;
+            });
+        }
+    };
+    console.log("check video: ", videos)
 
     return (
         <>
@@ -59,31 +104,6 @@ export default function Explores(){
                     Search thousands of performances across music, dance, art, coding and more.
                     Find creators, give feedback, get noticed.
                     </p>
-
-                    {/* Search bar */}
-                    {/* <div className="mt-8 flex items-center bg-white rounded-full border border-gray-200 shadow-sm pl-5 pr-2 py-2 max-w-2xl mx-auto">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2" className="shrink-0">
-                            <circle cx="11" cy="11" r="7" />
-                            <line x1="21" y1="21" x2="16.65" y2="16.65" />
-                        </svg>
-
-                        <input
-                            type="text"
-                            placeholder="Try 'fingerstyle guitar' or 'contemporary dance'"
-                            className="flex-1 min-w-0 px-3 py-2 text-sm text-gray-700 placeholder-gray-400 outline-none bg-transparent"
-                        />
-
-                        <div className="hidden sm:flex items-center gap-1 px-3 py-2 text-sm text-gray-600 border-l border-gray-200 cursor-pointer select-none">
-                            All categories
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2">
-                            <path d="M6 9l6 6 6-6" />
-                            </svg>
-                        </div>
-
-                        <button className="ml-1 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-5 py-2.5 rounded-full transition-colors shrink-0">
-                            Search
-                        </button>
-                    </div> */}
 
                     <div className="mt-5 flex flex-wrap items-center justify-center gap-2 text-sm">
                     <span className="text-gray-400 mr-1">Popular:</span>
@@ -157,7 +177,13 @@ export default function Explores(){
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                         {videos.map((video) => (
-                            <PublicVideoCard key={video.id} video={video} />
+                            <PublicVideoCard 
+                                key={video.id} 
+                                video={video} 
+                                isFollowing={following.has(video.owner?.id)}
+                                isLoadingFollow={loadingFollow.has(video.owner?.id)}
+                                onFollow={() => toggleFollow(video.owner?.id)}
+                                />
                         ))}
                     </div>
 

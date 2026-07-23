@@ -5,6 +5,9 @@ import { SearchOutlined, ReloadOutlined, EyeOutlined, CheckCircleOutlined, Close
 import axiosClient from "@/services/axiosClient";
 import { API } from "@/lib/apiendpoint";
 import { StringValue } from "@/lib/stringValue";
+import VideoExpandModal from "../../Contests/videoExpandModal";
+import { toast } from "react-toastify";
+
 
 interface Report {
     id: number;
@@ -45,7 +48,8 @@ export default function AdminReports() {
     const [selectedReport, setSelectedReport] = useState<Report | null>(null);
     const [modalOpen, setModalOpen] = useState(false);
     const [actionLoading, setActionLoading] = useState(false);
-    
+    const [expandedVideo, setExpandedVideo] = useState<any>(null);
+
     const fetchReports = async () => {
         setLoading(true);
         try {
@@ -73,13 +77,23 @@ export default function AdminReports() {
     const handleUpdateStatus = async (report: Report, status: "Reviewed" | "Actioned") => {
         setActionLoading(true);
         try {
+            if (status === "Actioned") {
+                const res = await axiosClient.delete(API.AXIOS_ADMIN_VIDEOS_DELETE.replace("{id}", report.videoId));
+                if (!res.data.isSuccess) {
+                    toast.error("Failed to delete this video. Please try again");
+                    return;
+                }
+            }
+
             await axiosClient.put(API.AXIOS_ADMIN_REPORT_UPDATE_STATUS.replace("{id}", String(report.id)), { status });
-            setReports((prev) =>
-                prev.map((r) => r.id === report.id ? { ...r, status } : r)
-            );
+            
+            setReports((prev) => prev.map((r) => r.id === report.id ? { ...r, status } : r));
             if (selectedReport?.id === report.id) {
                 setSelectedReport((prev) => prev ? { ...prev, status } : null);
             }
+
+        } catch (error) {
+            toast.error(error?.response?.data?.message ?? "Something went wrong");
         } finally {
             setActionLoading(false);
         }
@@ -98,6 +112,34 @@ export default function AdminReports() {
                     >
                     </Avatar>
                     <span className="text-sm text-gray-900">@{record.reporter.username}</span>
+                </div>
+            ),
+        },
+        {
+            title: "Video",
+            key: "video",
+            width: 140,
+            render: (_, record) => (
+                <div
+                    className="relative w-32 aspect-video bg-gray-900 rounded-lg overflow-hidden cursor-pointer group"
+                    onClick={() => setExpandedVideo({
+                        videoUrl: record.videoUrl.startsWith("http") ? record.videoUrl : `${API.URL}${record.videoUrl}`,
+                        videoTitle: record.videoTitle,
+                    })}
+                >
+                    <video
+                        src={record.videoUrl.startsWith("http") ? record.videoUrl : `${API.URL}${record.videoUrl}`}
+                        className="w-full h-full object-cover"
+                        muted
+                        preload="metadata"
+                    />
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="w-8 h-8 rounded-full bg-black/50 flex items-center justify-center">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="white">
+                                <path d="M8 5v14l11-7Z" />
+                            </svg>
+                        </div>
+                    </div>
                 </div>
             ),
         },
@@ -139,14 +181,6 @@ export default function AdminReports() {
             width: 130,
             render: (_, record) => (
                 <Space size="small">
-                    <Tooltip title="View detail">
-                        <Button
-                            type="text"
-                            size="small"
-                            icon={<EyeOutlined />}
-                            onClick={() => { setSelectedReport(record); setModalOpen(true); }}
-                        />
-                    </Tooltip>
                     {record.status === "Pending" && (
                         <>
                             <Tooltip title="Mark as Reviewed">
@@ -285,6 +319,10 @@ export default function AdminReports() {
                     </div>
                 )}
             </Modal>
+
+            {expandedVideo && (
+                <VideoExpandModal video={expandedVideo} onClose={() => setExpandedVideo(null)} />
+            )}
         </div>
     );
 }
