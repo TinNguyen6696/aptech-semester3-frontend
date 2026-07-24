@@ -1,4 +1,3 @@
-import { StringValue } from "@/lib/stringValue";
 import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { API } from "@/lib/apiendpoint";
@@ -9,6 +8,7 @@ import { toast } from 'react-toastify';
 import { useUserStore } from "@/Store/userStore";
 import type { ProfileFormValues } from "@/types/profile.types";
 import type { Province, RegisterOptions } from "@/types/auth.types";
+import UserAvatar from "@/components/ui/UserAvatar/userAvatar";
 
 export default function Profile(){
     const [localPreview, setLocalPreview] = useState<string | null>(null);
@@ -17,10 +17,6 @@ export default function Profile(){
     const [isEditing, setIsEditing] = useState(false);
     const [provinces, setProvinces] = useState<Province[]>([])
     const [options, setOptions] = useState<RegisterOptions>({})
-    const derivedPreviewUrl = userInfo?.profileImageUrl 
-        ? `${API.URL}/${userInfo.profileImageUrl}` 
-        : null;
-    const previewUrl = localPreview || derivedPreviewUrl;
     useEffect(() => {
       const fetchProvinces = async () => {
         try {
@@ -195,21 +191,15 @@ export default function Profile(){
                 </div>
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 flex items-center gap-5">
                     <div className="relative flex-shrink-0">
-                        {previewUrl ? (
-                            <img 
-                            src={previewUrl} 
-                            alt="Preview" 
-                            className="w-20 h-20 rounded-full object-cover border border-gray-200"
-                            onError={(e) => {
-                                e.currentTarget.src = StringValue.USER_AVATAR_DEFAULT;
-                                e.currentTarget.onerror = null;
-                            }}
-                            />
-                        ) : (
-                            <span className="w-20 h-20 rounded-full bg-blue-600 text-white flex items-center justify-center text-2xl font-bold">
-                            M
-                            </span>
-                        )}
+                        <UserAvatar
+                            src={localPreview}
+                            profileImageUrl={userInfo?.profileImageUrl}
+                            firstName={userInfo?.firstName}
+                            lastName={userInfo?.lastName}
+                            username={userInfo?.username}
+                            size={80}
+                            className="border border-gray-200 text-2xl"
+                        />
                         <button type="button" onClick={onTriggerUpload} className="absolute -bottom-1 cursor-pointer -right-1 w-7 h-7 rounded-full bg-white border border-gray-200 flex items-center justify-center shadow-sm hover:bg-gray-50">
                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#4b5563" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/>
@@ -218,6 +208,7 @@ export default function Profile(){
                         </div>
                         <div>
                         <p className="text-sm font-semibold text-gray-900">Avatar</p>
+                        <p className="text-xs text-gray-500 mt-0.5">@{userInfo?.username}</p>
                         <p className="text-xs text-gray-400 mt-0.5">PNG or JPG, Maximum 2MB</p>
                         <input 
                             hidden 

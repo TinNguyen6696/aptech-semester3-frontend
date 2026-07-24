@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
 import type { ColumnsType } from "antd/es/table";
-import { Table, Input, Select, Button, Tag, Space, Tooltip, Modal, Descriptions, Badge, Avatar } from "antd";
+import { Table, Input, Select, Button, Tag, Space, Tooltip, Modal, Descriptions, Badge } from "antd";
 import { SearchOutlined, ReloadOutlined, EyeOutlined, CheckCircleOutlined, CloseCircleOutlined } from "@ant-design/icons";
 import axiosClient from "@/services/axiosClient";
 import { API } from "@/lib/apiendpoint";
-import { StringValue } from "@/lib/stringValue";
 import VideoExpandModal from "../../Contests/videoExpandModal";
+import UserAvatar from "@/components/ui/UserAvatar/userAvatar";
 import { toast } from "react-toastify";
 
 
@@ -77,16 +77,8 @@ export default function AdminReports() {
     const handleUpdateStatus = async (report: Report, status: "Reviewed" | "Actioned") => {
         setActionLoading(true);
         try {
-            if (status === "Actioned") {
-                const res = await axiosClient.delete(API.AXIOS_ADMIN_VIDEOS_DELETE.replace("{id}", report.videoId));
-                if (!res.data.isSuccess) {
-                    toast.error("Failed to delete this video. Please try again");
-                    return;
-                }
-            }
-
             await axiosClient.put(API.AXIOS_ADMIN_REPORT_UPDATE_STATUS.replace("{id}", String(report.id)), { status });
-            
+
             setReports((prev) => prev.map((r) => r.id === report.id ? { ...r, status } : r));
             if (selectedReport?.id === report.id) {
                 setSelectedReport((prev) => prev ? { ...prev, status } : null);
@@ -105,12 +97,11 @@ export default function AdminReports() {
             key: "reporter",
             render: (_, record) => (
                 <div className="flex items-center gap-2">
-                    <Avatar
-                        src={`${StringValue.USER_AVATAR_DEFAULT}`}
+                    <UserAvatar
+                        profileImageUrl={record.reporter.profileImageUrl}
+                        username={record.reporter.username}
                         size={28}
-                        style={{ backgroundColor: "#2563eb" }}
-                    >
-                    </Avatar>
+                    />
                     <span className="text-sm text-gray-900">@{record.reporter.username}</span>
                 </div>
             ),
@@ -182,25 +173,25 @@ export default function AdminReports() {
             render: (_, record) => (
                 <Space size="small">
                     {record.status === "Pending" && (
-                        <>
-                            <Tooltip title="Mark as Reviewed">
-                                <Button
-                                    type="text"
-                                    size="small"
-                                    icon={<CheckCircleOutlined style={{ color: "#16a34a" }} />}
-                                    onClick={() => handleUpdateStatus(record, "Reviewed")}
-                                />
-                            </Tooltip>
-                            <Tooltip title="Action taken">
-                                <Button
-                                    type="text"
-                                    size="small"
-                                    danger
-                                    icon={<CloseCircleOutlined />}
-                                    onClick={() => handleUpdateStatus(record, "Actioned")}
-                                />
-                            </Tooltip>
-                        </>
+                        <Tooltip title="Mark as Reviewed">
+                            <Button
+                                type="text"
+                                size="small"
+                                icon={<CheckCircleOutlined style={{ color: "#16a34a" }} />}
+                                onClick={() => handleUpdateStatus(record, "Reviewed")}
+                            />
+                        </Tooltip>
+                    )}
+                    {(record.status === "Pending" || record.status === "Reviewed") && (
+                        <Tooltip title="Action taken">
+                            <Button
+                                type="text"
+                                size="small"
+                                danger
+                                icon={<CloseCircleOutlined />}
+                                onClick={() => handleUpdateStatus(record, "Actioned")}
+                            />
+                        </Tooltip>
                     )}
                 </Space>
             ),
@@ -262,11 +253,13 @@ export default function AdminReports() {
                 open={modalOpen}
                 onCancel={() => { setModalOpen(false); setSelectedReport(null); }}
                 footer={
-                    selectedReport?.status === "Pending" ? (
+                    selectedReport && selectedReport.status !== "Actioned" ? (
                         <Space>
-                            <Button onClick={() => handleUpdateStatus(selectedReport, "Reviewed")}>
-                                Mark Reviewed
-                            </Button>
+                            {selectedReport?.status === "Pending" && (
+                                <Button onClick={() => handleUpdateStatus(selectedReport, "Reviewed")}>
+                                    Mark Reviewed
+                                </Button>
+                            )}
                             <Button type="primary" onClick={() => handleUpdateStatus(selectedReport, "Actioned")}>
                                 Action Taken
                             </Button>
@@ -281,12 +274,11 @@ export default function AdminReports() {
                         <Descriptions column={1} size="small" bordered>
                             <Descriptions.Item label="Reporter">
                                 <div className="flex items-center gap-2">
-                                    <Avatar
-                                        src={`${StringValue.USER_AVATAR_DEFAULT}`}
+                                    <UserAvatar
+                                        profileImageUrl={selectedReport.reporter.profileImageUrl}
+                                        username={selectedReport.reporter.username}
                                         size={24}
-                                        style={{ backgroundColor: "#2563eb" }}
-                                    >
-                                    </Avatar>
+                                    />
                                     @{selectedReport.reporter.username}
                                 </div>
                             </Descriptions.Item>

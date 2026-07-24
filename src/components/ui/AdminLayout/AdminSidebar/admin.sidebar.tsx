@@ -7,7 +7,7 @@ const NAV_ITEMS = [
     { label: "Users", href: "/admin/users", icon: "👤" },
     // { label: "Mentors", href: "/admin/mentors", icon: "🎓" },
     // { label: "Contests", href: "/admin/contests", icon: "🏆" },
-    { label: "Communities", href: "/admin/communities", icon: "👥" },
+    // { label: "Communities", href: "/admin/communities", icon: "👥" },
     { label: "Reports", href: "/admin/reports", icon: "🚩" },
 ];
 

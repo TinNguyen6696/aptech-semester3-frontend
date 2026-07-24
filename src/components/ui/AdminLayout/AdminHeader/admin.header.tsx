@@ -5,6 +5,7 @@ import { API } from "@/lib/apiendpoint";
 import axiosClient from "@/services/axiosClient";
 import { StringValue } from "@/lib/stringValue";
 import { useNavigate } from "@tanstack/react-router";
+import UserAvatar from "@/components/ui/UserAvatar/userAvatar";
 
 interface Props {
     collapsed: boolean;
@@ -69,6 +70,26 @@ export default function AdminHeader({ collapsed, onToggle, userInfo, clearUserIn
         setAvatarOpen(false);
     };
 
+    const handleMarkRead = async (id: number) => {
+        try {
+            await axiosClient.put(API.AXIOS_NOTIFICATIONS_READ.replace('{id}', String(id)));
+            setNotifications((prev) =>
+                prev.map((n) => n.id === id ? { ...n, isRead: true } : n)
+            );
+        } catch {
+            // silent
+        }
+    };
+
+    const handleMarkAllRead = async () => {
+        try {
+            await axiosClient.put(API.AXIOS_NOTIFICATIONS_READ_ALL);
+            setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+        } catch {
+            // silent
+        }
+    };
+
     const handleToggleAvatar = () => {
         setAvatarOpen((v) => !v);
         setNotiOpen(false);
@@ -82,12 +103,6 @@ export default function AdminHeader({ collapsed, onToggle, userInfo, clearUserIn
     };
 
     const unreadCount = notifications.filter((n) => !n.isRead).length;
-    
-    const avatarSrc = userInfo?.profileImageUrl
-        ? `${API.URL}${userInfo.profileImageUrl}`
-        : StringValue.USER_AVATAR_DEFAULT;
-
-    const initials = `${userInfo?.firstName?.[0] ?? ""}${userInfo?.lastName?.[0] ?? ""}`.toUpperCase();
 
     return (
         <header className="bg-white border-b border-gray-100 px-4 flex items-center justify-between flex-shrink-0" style={{ height: "61px" }}>
@@ -124,7 +139,12 @@ export default function AdminHeader({ collapsed, onToggle, userInfo, clearUserIn
                             <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
                                 <span className="text-sm font-semibold text-gray-800">Notifications</span>
                                 {unreadCount > 0 && (
-                                    <span className="text-xs text-blue-600 font-medium">{unreadCount} new</span>
+                                    <button
+                                        onClick={handleMarkAllRead}
+                                        className="text-xs text-blue-600 font-medium hover:text-blue-800 cursor-pointer transition-colors"
+                                    >
+                                        Mark all as read
+                                    </button>
                                 )}
                             </div>
                             <div className="max-h-72 overflow-y-auto divide-y divide-gray-50">
@@ -136,9 +156,18 @@ export default function AdminHeader({ collapsed, onToggle, userInfo, clearUserIn
                                     <p className="text-sm text-gray-400 text-center py-8">No notifications</p>
                                 ) : (
                                     notifications?.map((n) => (
-                                        <div key={n.id} className={`px-4 py-3 hover:bg-gray-50 transition-colors ${!n.isRead ? "bg-blue-50/50" : ""}`}>
-                                            <p className="text-sm font-semibold text-gray-800">{n.title}</p>
-                                            <p className="text-xs text-gray-500 mt-0.5">{n.message}</p>
+                                        <div
+                                            key={n.id}
+                                            onClick={() => !n.isRead && handleMarkRead(n.id)}
+                                            className={`px-4 py-3 flex items-start justify-between gap-3 hover:bg-gray-50 transition-colors ${!n.isRead ? "bg-blue-50/50 cursor-pointer" : ""}`}
+                                        >
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-sm font-semibold text-gray-800">{n.title}</p>
+                                                <p className="text-xs text-gray-500 mt-0.5">{n.message}</p>
+                                            </div>
+                                            {!n.isRead && (
+                                                <span className="flex-shrink-0 w-2 h-2 mt-1.5 rounded-full bg-blue-500" title="Unread" />
+                                            )}
                                         </div>
                                     ))
                                 )}
@@ -150,13 +179,12 @@ export default function AdminHeader({ collapsed, onToggle, userInfo, clearUserIn
                 {/* Avatar */}
                 <div ref={avatarRef} className="relative">
                     <button onClick={handleToggleAvatar} className="flex items-center gap-2 p-1 rounded-lg hover:bg-gray-50 transition-colors">
-                        {userInfo?.profileImageUrl ? (
-                            <img src={avatarSrc} alt="avatar" className="w-8 h-8 rounded-full object-cover" />
-                        ) : (
-                            <span className="w-8 h-8 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center">
-                                {initials}
-                            </span>
-                        )}
+                        <UserAvatar
+                            profileImageUrl={userInfo?.profileImageUrl}
+                            firstName={userInfo?.firstName}
+                            lastName={userInfo?.lastName}
+                            size={32}
+                        />
                         <span className="text-xs text-gray-600 font-medium hidden sm:block">
                             {userInfo?.firstName} {userInfo?.lastName}
                         </span>

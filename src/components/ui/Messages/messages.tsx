@@ -158,7 +158,7 @@ export default function Messages() {
                 setConversations((prev : any) =>
                     prev.map((c) =>
                         c.id === activeId
-                            ? { ...c, lastMessage: text, lastMessageAt: new Date() }
+                            ? { ...c, lastMessage: text, lastMessageAt: new Date().toISOString() }
                             : c
                     )
                 );

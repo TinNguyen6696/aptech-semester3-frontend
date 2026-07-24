@@ -6,7 +6,7 @@ import { API } from "@/lib/apiendpoint";
 import axiosClient from "@/services/axiosClient";
 import { useUserStore } from "@/Store/userStore";
 import { CATEGORY_CONFIG, Icon } from "./mentorConfig";
-import { StringValue } from "@/lib/stringValue";
+import UserAvatar from "@/components/ui/UserAvatar/userAvatar";
 
 const SKILL_BADGE = {
     Beginner: "bg-gray-100 text-gray-600",
@@ -126,14 +126,13 @@ export default function MentorProfile({ id }) {
                 <div className="border border-gray-100 rounded-2xl p-6 mb-6">
                     <div className="flex items-start justify-between flex-wrap gap-4">
                         <div className="flex items-start gap-4">
-                            <img
-                                src={mentor?.profileImageUrl ? `${API.URL}${mentor?.profileImageUrl}` : StringValue.USER_AVATAR_DEFAULT}
-                                alt="avatar"
-                                className="w-16 h-16 rounded-full object-cover flex-shrink-0 border border-gray-100"
-                                onError={(e) => {
-                                    e.currentTarget.onerror = null;
-                                    e.currentTarget.src = StringValue.USER_AVATAR_DEFAULT;
-                                }}
+                            <UserAvatar
+                                profileImageUrl={mentor?.profileImageUrl}
+                                firstName={mentor?.firstName}
+                                lastName={mentor?.lastName}
+                                username={mentor?.username}
+                                size={64}
+                                className="border border-gray-100"
                             />
                             <div>
                                 <h1 className="text-lg font-bold text-gray-900">

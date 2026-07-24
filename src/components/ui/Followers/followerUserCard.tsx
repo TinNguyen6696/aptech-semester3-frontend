@@ -1,19 +1,5 @@
-import { API } from "@/lib/apiendpoint";
-import { StringValue } from "@/lib/stringValue";
+import UserAvatar from "@/components/ui/UserAvatar/userAvatar";
 import { useState } from "react";
-
-const AVATAR_COLORS = [
-  { bg: "#EEF2FF", text: "#4338CA" },
-  { bg: "#F0FDF4", text: "#15803D" },
-  { bg: "#FFF7ED", text: "#C2410C" },
-  { bg: "#FDF4FF", text: "#7E22CE" },
-  { bg: "#FFF1F2", text: "#BE123C" },
-  { bg: "#ECFEFF", text: "#0E7490" },
-];
-
-function getAvatarColor(id) {
-  return AVATAR_COLORS[id % AVATAR_COLORS.length];
-}
 
 function skillBadgeStyle(level) {
   const map = {
@@ -25,27 +11,19 @@ function skillBadgeStyle(level) {
 }
 
 export default function UserCard({ user, tab, followState, onToggleFollow }) {
-  const color = getAvatarColor(user.id);
   const badge = skillBadgeStyle(user.skillLevel);
   const isFollowing = followState[user.id];
   const [hovered, setHovered] = useState(false);
  console.log(`UserCard id:${user.id} tab:${tab} isFollowing:${isFollowing}`);
   return (
     <div className="bg-white border border-gray-200 rounded-xl p-4 flex flex-col items-center gap-2 text-center">
-      <div
-        className="w-11 h-11 rounded-full flex items-center justify-center font-medium text-sm overflow-hidden flex-shrink-0"
-        style={{ background: color.bg, color: color.text }}
-      >
-        <img 
-            src={`${API.URL}${user.profileImageUrl}`} 
-            alt={user.username} 
-            className="w-full h-full object-cover" 
-            onError={(e) => {
-                e.currentTarget.src = StringValue.USER_AVATAR_DEFAULT;
-                e.currentTarget.onerror = null;
-            }}
-        />
-      </div>
+      <UserAvatar
+        profileImageUrl={user.profileImageUrl}
+        firstName={user.firstName}
+        lastName={user.lastName}
+        username={user.username}
+        size={44}
+      />
 
       <div className="flex flex-col items-center gap-0.5">
         <p className="text-sm font-medium text-gray-900 m-0">

@@ -1,8 +1,15 @@
+import { useNavigate } from "@tanstack/react-router";
 import { API } from "@/lib/apiendpoint";
 import { IconContestDetail } from "./contestCategoryConfig";
 
 
 export default function WinnerPodium({ top3, onOpen }) {
+    const navigate = useNavigate();
+    const goToOwnerProfile = (e, ownerId) => {
+        e.stopPropagation();
+        if (ownerId) navigate({ to: "/mentorProfile", search: { id: ownerId } });
+    };
+
     const PODIUM_CONFIG = {
         1: { label: "1st place", chipBg: "bg-amber-100", chipText: "text-amber-700", border: "border-amber-300", crown: true },
         2: { label: "2nd place", chipBg: "bg-gray-100", chipText: "text-gray-600", border: "border-gray-300", crown: false },
@@ -51,7 +58,12 @@ export default function WinnerPodium({ top3, onOpen }) {
                                     {cfg.label}
                                 </span>
                                 <h3 className="text-[15px] font-semibold text-gray-900 leading-snug">{first.videoTitle}</h3>
-                                <p className="text-sm text-gray-500">{first.mine ? "You" : first.owner?.username ?? first.author}</p>
+                                <p
+                                    className={`text-sm text-gray-500 w-fit ${!first.mine && first.owner?.id ? "hover:text-blue-600 hover:underline" : ""}`}
+                                    onClick={(e) => !first.mine && goToOwnerProfile(e, first.owner?.id)}
+                                >
+                                    {first.mine ? "You" : first.owner?.username ?? first.author}
+                                </p>
                                 <div className="flex items-center gap-1 mt-0.5">
                                     <IconContestDetail.ChevronUp className="w-4 h-4 text-gray-400" />
                                     <span className="text-sm font-bold text-gray-700">{first.voteCount}</span>
@@ -93,7 +105,12 @@ export default function WinnerPodium({ top3, onOpen }) {
                                             {cfg.label}
                                         </span>
                                         <p className="text-sm font-semibold text-gray-900 truncate leading-snug">{entry.videoTitle}</p>
-                                        <p className="text-xs text-gray-500 truncate">{entry.mine ? "You" : entry.owner?.username ?? entry.author}</p>
+                                        <p
+                                            className={`text-xs text-gray-500 truncate w-fit ${!entry.mine && entry.owner?.id ? "hover:text-blue-600 hover:underline" : ""}`}
+                                            onClick={(e) => !entry.mine && goToOwnerProfile(e, entry.owner?.id)}
+                                        >
+                                            {entry.mine ? "You" : entry.owner?.username ?? entry.author}
+                                        </p>
                                         <div className="flex items-center gap-1 mt-0.5">
                                             <IconContestDetail.ChevronUp className="w-3.5 h-3.5 text-gray-400" />
                                             <span className="text-xs font-bold text-gray-700">{entry.voteCount}</span>

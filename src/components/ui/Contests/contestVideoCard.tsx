@@ -1,9 +1,11 @@
 import { useRef, useState } from "react";
+import { useNavigate } from "@tanstack/react-router";
 import { IconContestDetail, RANK_STYLE } from "./contestCategoryConfig";
 import { API } from "@/lib/apiendpoint";
 import { StringValue } from "@/lib/stringValue";
 
 export default function ContestVideoCard({ entry, rank, onVote, onOpen, onDelete, role }) {
+    const navigate = useNavigate();
     const videoRef = useRef(null);
     const [isPlaying, setIsPlaying] = useState(false);
     console.log("check entry: ", entry)
@@ -100,7 +102,15 @@ export default function ContestVideoCard({ entry, rank, onVote, onOpen, onDelete
             <div className="mt-3 flex items-start justify-between gap-3">
                 <div className="min-w-0 cursor-pointer" onClick={() => onOpen?.(entry)}>
                     <h3 className="text-[15px] font-semibold text-gray-900 truncate">{entry.videoTitle}</h3>
-                    <p className="text-sm text-gray-500 mt-0.5">{entry.owner.username}</p>
+                    <p
+                        className="text-sm text-gray-500 mt-0.5 w-fit hover:text-blue-600 hover:underline"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            if (entry.owner?.id) navigate({ to: "/mentorProfile", search: { id: entry.owner.id } });
+                        }}
+                    >
+                        {entry.owner.username}
+                    </p>
                 </div>
 
                 {role !== StringValue.RECRUITER && (

@@ -7,17 +7,19 @@ import DateUtil from "@/lib/dateUtil";
 import axiosClient from "@/services/axiosClient";
 import { useUserStore } from "@/Store/userStore";
 import { toast } from "react-toastify";
+import UserAvatar from "@/components/ui/UserAvatar/userAvatar";
 
 const PAGE_SIZE = 5;
 
+const AVATAR_SIZE_PX: Record<string, number> = { "w-8 h-8": 32, "w-9 h-9": 36 };
+
 function Avatar({ author, size = "w-9 h-9" }) {
     return (
-        <img
-            src={`${API.URL}${author?.profileImageUrl ?? ""}`}
-            className={`${size} rounded-full object-cover shrink-0`}
-            onError={(e) => {
-                (e.target as HTMLImageElement).src = StringValue.USER_AVATAR_DEFAULT;
-            }}
+        <UserAvatar
+            profileImageUrl={author?.profileImageUrl}
+            username={author?.username}
+            size={AVATAR_SIZE_PX[size] ?? 36}
+            className="shrink-0"
         />
     );
 }

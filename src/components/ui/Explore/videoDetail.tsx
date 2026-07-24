@@ -9,8 +9,10 @@ import CommentItem from "@/components/Comment/comment";
 import axiosClient from "@/services/axiosClient";
 import { API } from "@/lib/apiendpoint";
 import { toast } from "react-toastify";
+import { StringValue } from "@/lib/stringValue";
 import VideoScrollTrigger from "@/components/Trigger/videoScrollTrigger";
 import DateUtil from "@/lib/dateUtil";
+import UserAvatar from "@/components/ui/UserAvatar/userAvatar";
 
 export default function VideoDetail({ id }) {
     const navigate = useNavigate();
@@ -85,6 +87,10 @@ export default function VideoDetail({ id }) {
         if (!userInfo) {
             toast.info("Log in to like");
             navigate({ to: "/login", search: { redirect: location.href } });
+            return;
+        }
+        if (userInfo.role === StringValue.RECRUITER) {
+            toast.info("Recruiters can't like videos");
             return;
         }
         if (isLiking) return;
@@ -232,9 +238,6 @@ export default function VideoDetail({ id }) {
         );
     }
 
-    const ownerInitials =
-        video.owner?.username?.slice(0, 2).toUpperCase() ?? "??";
-
     return (
         <div className="max-w-7xl mx-auto py-8">
             <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-8">
@@ -314,20 +317,19 @@ export default function VideoDetail({ id }) {
 
                     {/* Owner info */}
                     <div className="mt-4 flex items-center justify-between border-t border-b border-gray-100 py-4">
-                        <div className="flex items-center gap-3">
-                            {video.owner?.avatarUrl ? (
-                                <img
-                                    src={video.owner.avatarUrl}
-                                    alt={video.owner.username}
-                                    className="w-11 h-11 rounded-full object-cover"
-                                />
-                            ) : (
-                                <span className="w-11 h-11 rounded-full bg-blue-500 flex items-center justify-center text-sm font-bold text-white">
-                                    {ownerInitials}
-                                </span>
-                            )}
+                        <div
+                            className="flex items-center gap-3 cursor-pointer group"
+                            onClick={() => {
+                                if (video.owner?.id) navigate({ to: "/mentorProfile", search: { id: video.owner.id } });
+                            }}
+                        >
+                            <UserAvatar
+                                profileImageUrl={video.owner?.profileImageUrl}
+                                username={video.owner?.username}
+                                size={44}
+                            />
                             <div>
-                                <p className="text-sm font-semibold text-gray-900">
+                                <p className="text-sm font-semibold text-gray-900 group-hover:text-blue-600 group-hover:underline">
                                     {video.owner?.username}
                                 </p>
                                 <p className="text-xs text-gray-400">

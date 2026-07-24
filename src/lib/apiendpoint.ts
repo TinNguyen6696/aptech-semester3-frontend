@@ -111,6 +111,6 @@ export const API = {
 
     AXIOS_NOTIFICATIONS_GET_ALL:`notifications`,
     AXIOS_NOTIFICATIONS_READ:`notifications/{id}/read`,
-    AXIOS_NOTIFICATIONS_READ_ALL:`notification/read-all`
+    AXIOS_NOTIFICATIONS_READ_ALL:`notifications/read-all`
 
 }

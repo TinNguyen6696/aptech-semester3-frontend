@@ -7,6 +7,7 @@ import { useUserStore } from '@/Store/userStore';
 import axiosClient from '@/services/axiosClient';
 import type { Notification } from '@/types/notification.types';
 import DateUtil from '@/lib/dateUtil';
+import UserAvatar from '@/components/ui/UserAvatar/userAvatar';
 
 const ALL_ROLES = ['guest', StringValue.MEMBER, StringValue.MENTOR, StringValue.RECRUITER, StringValue.ADMIN];
 
@@ -44,10 +45,7 @@ export default function HeaderLayout(){
     const { userInfo, updateUserInfo, clearUserInfo } = useUserStore();
     const currentRole = userInfo?.role ?? 'guest';
     const visibleNavItems = NAV_ITEMS.filter((item) => item.roles.includes(currentRole));
-    const previewUrl = userInfo?.profileImageUrl
-        ? `${API.URL}/${userInfo.profileImageUrl}`
-        : StringValue.USER_AVATAR_DEFAULT;
-     
+
     useEffect(() => {
         function handleClickOutside(event) {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -141,12 +139,16 @@ export default function HeaderLayout(){
         }
     };
 
-    const unreadNotiCount = notifications?.filter((n) => !n.isRead).length;
-
-    const getInitial = () => {
-        const name = userInfo?.fullName || userInfo?.name || userInfo?.email || '';
-        return name.charAt(0).toUpperCase();
+    const handleMarkAllRead = async () => {
+        try {
+            await axiosClient.put(API.AXIOS_NOTIFICATIONS_READ_ALL);
+            setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+        } catch {
+            // silent
+        }
     };
+
+    const unreadNotiCount = notifications?.filter((n) => !n.isRead).length;
 
     return (
         <>
@@ -200,7 +202,12 @@ export default function HeaderLayout(){
                                     <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
                                         <span className="text-sm font-semibold text-gray-800">Notifications</span>
                                         {unreadNotiCount > 0 && (
-                                            <span className="text-xs text-blue-600 font-medium">{unreadNotiCount} new</span>
+                                            <button
+                                                onClick={handleMarkAllRead}
+                                                className="text-xs text-blue-600 font-medium hover:text-blue-800 cursor-pointer transition-colors"
+                                            >
+                                                Mark all as read
+                                            </button>
                                         )}
                                     </div>
                                     <div className="max-h-72 overflow-y-auto divide-y divide-gray-50">
@@ -212,21 +219,17 @@ export default function HeaderLayout(){
                                             <p className="text-sm text-gray-400 text-center py-8">No notifications</p>
                                         ) : (
                                             notifications?.map((n) => (
-                                                <div key={n.id} className={`px-4 py-3 flex items-start justify-between gap-3 hover:bg-gray-50 transition-colors ${!n.isRead ? "bg-blue-50/50" : ""}`}>
+                                                <div
+                                                    key={n.id}
+                                                    onClick={() => !n.isRead && handleMarkRead(n.id)}
+                                                    className={`px-4 py-3 flex items-start justify-between gap-3 hover:bg-gray-50 transition-colors ${!n.isRead ? "bg-blue-50/50 cursor-pointer" : ""}`}
+                                                >
                                                     <div className="flex-1 min-w-0">
                                                         <p className="text-sm text-gray-800">{n.content}</p>
                                                         <p className="text-xs text-gray-400 mt-1">{DateUtil.timeAgo(n.createdAt+'Z')}</p>
                                                     </div>
                                                     {!n.isRead && (
-                                                        <button
-                                                            onClick={() => handleMarkRead(n.id)}
-                                                            className="flex-shrink-0 p-1.5 cursor-pointer rounded-lg text-blue-400 hover:text-blue-600 hover:bg-blue-100 transition-colors"
-                                                            title="Mark as read"
-                                                        >
-                                                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                                                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                                                            </svg>
-                                                        </button>
+                                                        <span className="flex-shrink-0 w-2 h-2 mt-1.5 rounded-full bg-blue-500" title="Unread" />
                                                     )}
                                                 </div>
                                             ))
@@ -262,21 +265,14 @@ export default function HeaderLayout(){
                                     onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                                     className="flex items-center gap-2 focus:outline-none cursor-pointer"
                                 >
-                                    {previewUrl ? (
-                                        <img
-                                            src={previewUrl}
-                                            alt="avatar"
-                                            className="w-8 h-8 rounded-full object-cover border border-gray-200"
-                                            onError={(e) => {
-                                                e.currentTarget.src = StringValue.USER_AVATAR_DEFAULT;
-                                                e.currentTarget.onerror = null;
-                                            }}
-                                        />
-                                    ) : (
-                                        <span className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-semibold">
-                                            {getInitial()}
-                                        </span>
-                                    )}
+                                    <UserAvatar
+                                        profileImageUrl={userInfo?.profileImageUrl}
+                                        firstName={userInfo?.firstName}
+                                        lastName={userInfo?.lastName}
+                                        username={userInfo?.username}
+                                        size={32}
+                                        className="border border-gray-200"
+                                    />
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-500">
                                         <polyline points="6 9 12 15 18 9"></polyline>
                                     </svg>
@@ -345,21 +341,14 @@ export default function HeaderLayout(){
                         <div className="mt-4 pt-4 border-t border-gray-100">
                             {userInfo ? (
                                 <div className="flex items-center gap-3">
-                                    {previewUrl ? (
-                                        <img
-                                            src={previewUrl}
-                                            alt="avatar"
-                                            className="w-9 h-9 rounded-full object-cover border border-gray-200"
-                                            onError={(e) => {
-                                                e.currentTarget.src = StringValue.USER_AVATAR_DEFAULT;
-                                                e.currentTarget.onerror = null;
-                                            }}
-                                        />
-                                    ) : (
-                                        <span className="w-9 h-9 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-semibold">
-                                            {getInitial()}
-                                        </span>
-                                    )}
+                                    <UserAvatar
+                                        profileImageUrl={userInfo?.profileImageUrl}
+                                        firstName={userInfo?.firstName}
+                                        lastName={userInfo?.lastName}
+                                        username={userInfo?.username}
+                                        size={36}
+                                        className="border border-gray-200"
+                                    />
                                     <div className="flex-1 min-w-0">
                                         <p className="text-sm font-semibold text-gray-900 truncate">
                                             {`${userInfo.firstName} ${userInfo.lastName}`}

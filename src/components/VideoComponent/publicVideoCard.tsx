@@ -49,7 +49,15 @@ export default function PublicVideoCard({ video, isFollowing, isLoadingFollow, o
             </div>
             <h3 className="mt-3 text-[15px] font-semibold text-gray-900">{video.title}</h3>
             <div className="mt-2 flex items-center justify-between">
-                <span className="text-sm text-gray-500">{video.owner?.username}</span>
+                <span
+                    className="text-sm text-gray-500 hover:text-blue-600 hover:underline cursor-pointer"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        if (video.owner?.id) navigate({ to: "/mentorProfile", search: { id: video.owner.id } });
+                    }}
+                >
+                    {video.owner?.username}
+                </span>
                 <button
                     onClick={(e) => {
                         e.stopPropagation();

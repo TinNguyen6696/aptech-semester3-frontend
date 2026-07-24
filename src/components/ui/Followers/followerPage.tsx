@@ -4,10 +4,7 @@ import { useUserStore } from "@/Store/userStore";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import UserCard from "./followerUserCard";
-
-function getInitials(user) {
-  return (user?.username?.[0] || "?").toUpperCase();
-}
+import UserAvatar from "@/components/ui/UserAvatar/userAvatar";
 
 export default function FollowerPage() {
     const {userInfo} = useUserStore();
@@ -70,16 +67,14 @@ export default function FollowerPage() {
       {/* Profile header */}
       {userInfo?.username && (
         <div className="flex items-center gap-3 p-4 bg-white border border-gray-200 rounded-xl mb-5">
-          <div
-            className="w-13 h-13 rounded-full flex items-center justify-center font-medium text-lg overflow-hidden flex-shrink-0"
-            style={{ background: "#EEF2FF", color: "#4338CA", width: 52, height: 52 }}
-          >
-            {userInfo?.profileImageUrl ? (
-              <img src={`${API.URL}${userInfo?.profileImageUrl}`} alt="profile" className="w-full h-full object-cover" />
-            ) : (
-              getInitials(userInfo)
-            )}
-          </div>
+          <UserAvatar
+            profileImageUrl={userInfo?.profileImageUrl}
+            firstName={userInfo?.firstName}
+            lastName={userInfo?.lastName}
+            username={userInfo?.username}
+            size={52}
+            className="text-lg"
+          />
           <div className="flex-1">
             <p className="font-medium text-sm text-gray-900">
               {userInfo?.username}

@@ -5,8 +5,8 @@ import { useUserStore } from "@/Store/userStore";
 import { Icon, CATEGORY_CONFIG } from "./mentorConfig";
 import axiosClient from "@/services/axiosClient";
 import { API } from "@/lib/apiendpoint";
-import { StringValue } from "@/lib/stringValue";
 import { TextUtil } from "@/lib/textUtil";
+import UserAvatar from "@/components/ui/UserAvatar/userAvatar";
 
 
 const SKILL_LEVELS = ["beginner", "intermediate", "advanced"];
@@ -145,15 +145,13 @@ export default function Mentors() {
             >
                 <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
-                        <img
-                            src={`${API.URL}${m.profileImageUrl}`}
-                            alt={m.username}
-                            onError={(e) => {
-                                e.currentTarget.src = StringValue.USER_AVATAR_DEFAULT;
-                                e.currentTarget.onerror = null;
-                            }}
-                            className="w-11 h-11 rounded-full object-cover flex-shrink-0"
-                            />      
+                        <UserAvatar
+                            profileImageUrl={m.profileImageUrl}
+                            firstName={m.firstName}
+                            lastName={m.lastName}
+                            username={m.username}
+                            size={44}
+                            />
                         <div>
                             <p className="text-sm font-bold text-gray-900">
                                 {m.firstName} {m.lastName}

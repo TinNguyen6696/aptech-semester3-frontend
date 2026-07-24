@@ -530,10 +530,10 @@ export default function Contests() {
                                 <div
                                     key={c.id}
                                     onClick={() => openDetail(c.id)}
-                                    className="cursor-pointer border border-gray-100 rounded-2xl p-5 flex flex-col gap-3 hover:shadow-sm hover:border-gray-200 transition-all"
+                                    className={`cursor-pointer border border-gray-100 rounded-2xl p-5 flex flex-col gap-3 hover:shadow-sm hover:border-gray-200 transition-all ${c.status === "ended" ? "opacity-50" : ""}`}
                                 >
                                     <div className="flex items-start justify-between">
-                                        <div className={`w-10 h-10 rounded-lg ${cfg.iconBg} flex items-center justify-center`}>
+                                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${c.status === "ended" ? "bg-gray-100 grayscale" : cfg.iconBg}`}>
                                             {cfg.icon}
                                         </div>
                                         <div className="flex items-center gap-2">
@@ -577,7 +577,9 @@ export default function Contests() {
 
                                     <div>
                                         <h3 className="text-sm font-bold text-gray-900">{c.title}</h3>
-                                        <span className={`inline-flex mt-1.5 items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${cfg.badgeBg} ${cfg.badgeColor}`}>
+                                        <span className={`inline-flex mt-1.5 items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${
+                                            c.status === "ended" ? "bg-gray-100 text-gray-500" : `${cfg.badgeBg} ${cfg.badgeColor}`
+                                        }`}>
                                             {cfg.label}
                                         </span>
                                     </div>
