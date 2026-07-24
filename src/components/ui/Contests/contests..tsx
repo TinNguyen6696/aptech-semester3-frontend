@@ -180,8 +180,8 @@ export default function Contests() {
                 Title: values.title.trim(),
                 Category: values.category,
                 Description: values.description.trim(),
-                StartDate: values.startDate,
-                EndDate: values.endDate,
+                StartDate: new Date(values.startDate).toISOString(),
+                EndDate: new Date(values.endDate).toISOString(),
             };
             try {
                 const api = editingContest ? axiosClient.put(
