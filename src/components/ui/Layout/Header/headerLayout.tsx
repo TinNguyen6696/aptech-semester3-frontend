@@ -226,7 +226,7 @@ export default function HeaderLayout(){
                                                 >
                                                     <div className="flex-1 min-w-0">
                                                         <p className="text-sm text-gray-800">{n.content}</p>
-                                                        <p className="text-xs text-gray-400 mt-1">{DateUtil.timeAgo(n.createdAt+'Z')}</p>
+                                                        <p className="text-xs text-gray-400 mt-1">{DateUtil.timeAgo(n.createdAt)}</p>
                                                     </div>
                                                     {!n.isRead && (
                                                         <span className="flex-shrink-0 w-2 h-2 mt-1.5 rounded-full bg-blue-500" title="Unread" />

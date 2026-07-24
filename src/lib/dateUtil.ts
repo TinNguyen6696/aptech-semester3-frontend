@@ -11,8 +11,9 @@ export default class DateUtil{
         });
     }
     static timeAgo = (dateStr) => {
-        if (!dateStr) return '';
-        const diffMs = Date.now() - new Date(dateStr).getTime();
+        const d = DateUtil.toValidDate(dateStr);
+        if (!d) return '';
+        const diffMs = Date.now() - d.getTime();
         const diffSec = Math.floor(diffMs / 1000);
         if (diffSec < 60) return 'Just now';
         const diffMin = Math.floor(diffSec / 60);
@@ -21,7 +22,7 @@ export default class DateUtil{
         if (diffHour < 24) return `${diffHour} hour${diffHour > 1 ? 's' : ''} ago`;
         const diffDay = Math.floor(diffHour / 24);
         if (diffDay < 7) return `${diffDay} day${diffDay > 1 ? 's' : ''} ago`;
-        return new Date(dateStr).toLocaleDateString();
+        return d.toLocaleDateString();
     };
 
     static toValidDate(createdAt) {

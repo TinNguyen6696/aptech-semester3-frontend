@@ -53,7 +53,7 @@ function PostCard({ post, communityId, canInteract }) {
                             </span>
                         )}
                     </div>
-                    <p className="text-xs text-gray-400">{DateUtil.timeAgo(post.createdAt+'Z')}</p>
+                    <p className="text-xs text-gray-400">{DateUtil.timeAgo(post.createdAt)}</p>
                 </div>
             </div>
 
