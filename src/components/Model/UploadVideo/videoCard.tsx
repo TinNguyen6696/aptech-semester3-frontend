@@ -86,7 +86,7 @@ export default function VideoRowCard({ video, openMenuId, setOpenMenuId, onDelet
         <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-500 bg-gray-100 px-2.5 py-1 rounded-full">
           {video.visibility}
         </span>
-        <span className="text-xs text-gray-400">{DateUtil.timeAgo(video.createdAt+'Z')}</span>
+        <span className="text-xs text-gray-400">{DateUtil.timeAgo(video.createdAt)}</span>
       </div>
     </div>
   );

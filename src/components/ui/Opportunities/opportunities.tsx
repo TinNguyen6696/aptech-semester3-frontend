@@ -8,6 +8,7 @@ import { toast } from "react-toastify";
 import { StringValue } from "@/lib/stringValue";
 import { Icon, getOpportunityCategoryConfig   } from "./opportunityConfig";
 import { TextUtil } from "@/lib/textUtil";
+import DateUtil from "@/lib/dateUtil";
 
 const PAGE_SIZE = 6;
 
@@ -195,8 +196,8 @@ export default function Opportunities({role}) {
             Category:    values.category,
             Description: values.description.trim(),
             ProvinceId:  Number(values.province_id),
-            PostedAt:    new Date(values.posted_at).toISOString(),
-            ExpiresAt:   new Date(values.expires_at).toISOString(),
+            PostedAt:    DateUtil.toStartOfDayISO(values.posted_at),
+            ExpiresAt:   DateUtil.toEndOfDayISO(values.expires_at),
         };
         try {
             const api = editingOpp

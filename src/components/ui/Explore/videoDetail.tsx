@@ -261,7 +261,7 @@ export default function VideoDetail({ id }) {
                     </h1>
                     <div className="mt-2 flex items-center justify-between flex-wrap gap-2">
                         <span className="text-sm text-gray-500">
-                            {viewCount} views · {DateUtil.timeAgo(video?.createdAt+'Z')}
+                            {viewCount} views · {DateUtil.timeAgo(video?.createdAt)}
                         </span>
                         <div className="flex items-center gap-2">
                             <button
