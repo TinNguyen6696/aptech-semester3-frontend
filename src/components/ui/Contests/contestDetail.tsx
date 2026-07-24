@@ -51,6 +51,7 @@ export default function ContestDetail({ onBack, id }) {
                         videoUrl: `${API.URL}${v.videoUrl}`,
                         category: v.category,
                         visibility: v.visibility,
+                        isRemovedByAdmin: v.isRemovedByAdmin,
                     }));
                     setOwnVideos(mapped);
                 }
@@ -317,7 +318,7 @@ export default function ContestDetail({ onBack, id }) {
             <SubmitEntryModal
                 open={showSubmitModal}
                 onClose={handleCloseSubmitModal}
-                myVideos={ownVideos.filter((v) => v.visibility === StringValue.TYPE_VIDEO_PUBLIC)}
+                myVideos={ownVideos.filter((v) => v.visibility === StringValue.TYPE_VIDEO_PUBLIC && !v.isRemovedByAdmin)}
                 loading={false}
                 selectedVideoId={selectedVideoId}
                 onSelect={setSelectedVideoId}
