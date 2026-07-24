@@ -180,8 +180,8 @@ export default function Contests() {
                 Title: values.title.trim(),
                 Category: values.category,
                 Description: values.description.trim(),
-                StartDate: new Date(values.startDate).toISOString(),
-                EndDate: new Date(values.endDate).toISOString(),
+                StartDate: DateUtil.toStartOfDayISO(values.startDate),
+                EndDate: DateUtil.toEndOfDayISO(values.endDate),
             };
             try {
                 const api = editingContest ? axiosClient.put(
@@ -283,9 +283,9 @@ export default function Contests() {
     const pageNumbers = useMemo(() => getPageNumbers(page, totalPages), [page, totalPages]);
 
     const handleDeleteContest = async(contest)=>{
-        const start = new Date(contest.startDate);
+        const start = DateUtil.toValidDate(contest.startDate);
         const now = new Date();
-        if(now >= start){
+        if(start && now >= start){
             toast.error(
                 "Cannot delete contest after it has started."
             );

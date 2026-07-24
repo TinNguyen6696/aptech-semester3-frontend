@@ -1,4 +1,4 @@
-const TODAY = new Date();
+import DateUtil from "@/lib/dateUtil";
 export const CATEGORY_PALETTE = [
     { badgeBg: "bg-purple-100", badgeColor: "text-purple-700", iconBg: "bg-purple-100", iconColor: "#7C3AED" },
     { badgeBg: "bg-amber-100", badgeColor: "text-amber-700", iconBg: "bg-amber-100", iconColor: "#B45309" },
@@ -126,14 +126,17 @@ export const STATUS_CONFIG = {
 };
 
 export const getStatus = (startDate, endDate) => {
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    if (TODAY < start) return "upcoming";
-    if (TODAY > end) return "ended";
+    const now = new Date();
+    const start = DateUtil.toValidDate(startDate);
+    const end = DateUtil.toValidDate(endDate);
+    if (start && now < start) return "upcoming";
+    if (end && now > end) return "ended";
     return "active";
 }
 export function daysLeft(endDate) {
-    const diff = Math.ceil((new Date(endDate) - TODAY) / (1000 * 60 * 60 * 24));
+    const end = DateUtil.toValidDate(endDate);
+    if (!end) return 0;
+    const diff = Math.ceil((end.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
     return diff;
 }
 
