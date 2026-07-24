@@ -1,11 +1,11 @@
 import type { UserInfo } from "@/types/user.types";
 import { useEffect, useState } from "react";
 import type { ColumnsType } from "antd/es/table";
-import { Table, Input, Select, Button, Tag, Avatar, Space, Tooltip, Modal, Descriptions } from "antd";
+import { Table, Input, Select, Button, Tag, Space, Tooltip, Modal, Descriptions } from "antd";
 import { SearchOutlined, ReloadOutlined, EyeOutlined, StopOutlined, CheckCircleOutlined } from "@ant-design/icons";
 import axiosClient from "@/services/axiosClient";
 import { API } from "@/lib/apiendpoint";
-import { StringValue } from "@/lib/stringValue";
+import UserAvatar from "@/components/ui/UserAvatar/userAvatar";
 
 const ROLE_COLOR: Record<string, string> = {
     Member: "blue",
@@ -95,13 +95,13 @@ export default function AdminUsers() {
             key: "user",
             render: (_, record) => (
                 <div className="flex items-center gap-3">
-                    <Avatar
-                        src={`${StringValue.USER_AVATAR_DEFAULT}`}
+                    <UserAvatar
+                        profileImageUrl={record.profileImageUrl}
+                        firstName={record.firstName}
+                        lastName={record.lastName}
+                        username={record.username}
                         size={36}
-                        style={{ backgroundColor: "#2563eb", flexShrink: 0 }}
-                    >
-                        {record.firstName[0]}
-                    </Avatar>
+                    />
                     <div className="min-w-0">
                         <p className="text-sm font-medium text-gray-900 leading-tight">
                             {record.firstName} {record.lastName}
@@ -255,13 +255,14 @@ export default function AdminUsers() {
                 {selectedUser && (
                     <div className="space-y-4">
                         <div className="flex items-center gap-4">
-                            <Avatar
-                                src={selectedUser.profileImageUrl || undefined}
+                            <UserAvatar
+                                profileImageUrl={selectedUser.profileImageUrl}
+                                firstName={selectedUser.firstName}
+                                lastName={selectedUser.lastName}
+                                username={selectedUser.username}
                                 size={64}
-                                style={{ backgroundColor: "#2563eb" }}
-                            >
-                                {selectedUser.firstName[0]}
-                            </Avatar>
+                                className="text-xl"
+                            />
                             <div>
                                 <p className="text-base font-semibold">{selectedUser.firstName} {selectedUser.lastName}</p>
                                 <p className="text-sm text-gray-400">@{selectedUser.username}</p>

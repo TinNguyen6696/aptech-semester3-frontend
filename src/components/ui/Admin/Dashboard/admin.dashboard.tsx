@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import type { ColumnsType } from "antd/es/table";
 import { Card, Row, Col, Statistic, Table, Tag, Skeleton } from "antd";
 import {
     UserOutlined,
@@ -11,44 +12,40 @@ import {
 import axiosClient from "@/services/axiosClient";
 import { API } from "@/lib/apiendpoint";
 
-interface DashboardStats {
-    users: {
-        total: number;
-        active: number;
-        banned: number;
-        byRole: { member: number; mentor: number; recruiter: number; admin: number };
-        newThisMonth: number;
-    };
-    videos: {
-        total: number;
-        totalViews: number;
-        totalLikes: number;
-    };
-    communities: {
-        total: number;
-        totalMembers: number;
-    };
-    contests: {
-        total: number;
-        ongoing: number;
-        ended: number;
-    };
-    messages: {
-        total: number;
-    };
-    opportunities: {
-        total: number;
-    };
+interface RecentUser {
+    id: number;
+    username: string;
+    email: string;
+    role: "Member" | "Mentor" | "Recruiter" | "Admin";
+    isActive: boolean;
+    emailConfirmed: boolean;
+    firstName: string | null;
+    lastName: string | null;
+    profileImageUrl: string | null;
+    createdAt: string;
 }
 
-// ── Recent users mock ─────────────────────────────────────────────────────────
-const MOCK_RECENT_USERS = Array.from({ length: 5 }, (_, i) => ({
-    id: i + 1,
-    name: ["Alice Smith", "Bob Johnson", "Carol Williams", "David Brown", "Eva Jones"][i],
-    email: `user${i + 1}@example.com`,
-    role: ["member", "mentor", "member", "recruiter", "member"][i],
-    createdAt: new Date(Date.now() - i * 86400000).toISOString(),
-}));
+interface DashboardStats {
+    totalUsers: number;
+    activeUsers: number;
+    bannedUsers: number;
+    memberCount: number;
+    mentorCount: number;
+    recruiterCount: number;
+    adminCount: number;
+    totalVideos: number;
+    totalViews: number;
+    totalLikes: number;
+    totalContests: number;
+    endedContests: number;
+    totalOpportunities: number;
+    totalCommunityPosts: number;
+    totalMessages: number;
+    newUsersLast7Days: number;
+    newUsersThisMonth: number;
+    newVideosLast7Days: number;
+    recentUsers: RecentUser[];
+}
 
 const ROLE_COLOR: Record<string, string> = {
     member: "blue",
@@ -57,7 +54,6 @@ const ROLE_COLOR: Record<string, string> = {
     admin: "red",
 };
 
-// ── Stat Card ─────────────────────────────────────────────────────────────────
 function StatCard({
     title,
     value,
@@ -117,39 +113,26 @@ function RoleBar({ label, count, total, color }: { label: string; count: number;
 export default function AdminDashboard() {
     const [stats, setStats] = useState<DashboardStats | null>(null);
     const [loading, setLoading] = useState(true);
-    const [dashBoard, setDashBoard] = useState(null);
 
-    const fetchDashBoard = async () => {
-        const res = await axiosClient.get(API.AXIOS_ADMIN_DASHBOARD);
-        if(res.data.isSuccess){
-            setDashBoard(res.data.data);
-            console.log("check res: ", res.data.data)
-        }
-    }
-    useEffect(()=>{
-        fetchDashBoard();
-    },[])
-    
     useEffect(() => {
-        const fetchStats = async () => {
+        const fetchDashboard = async () => {
             setLoading(true);
             try {
-                // TODO: thay bằng API thật
-                // const res = await axiosClient.get(API.AXIOS_ADMIN_DASHBOARD_STATS);
-                // if (res.data.isSuccess) setStats(res.data.data);
-                await new Promise((r) => setTimeout(r, 800));
-                setStats(MOCK_STATS);
+                const res = await axiosClient.get(API.AXIOS_ADMIN_DASHBOARD);
+                if (res.data.isSuccess) setStats(res.data.data);
+            } catch (error) {
+                console.error("Failed to fetch dashboard stats:", error);
             } finally {
                 setLoading(false);
             }
         };
-        fetchStats();
+        fetchDashboard();
     }, []);
 
-    const recentUsersColumns = [
+    const recentUsersColumns: ColumnsType<RecentUser> = [
         {
             title: "Name",
-            dataIndex: "name",
+            dataIndex: "username",
             key: "name",
             render: (name: string) => <span className="text-sm font-medium text-gray-800">{name}</span>,
         },
@@ -163,9 +146,12 @@ export default function AdminDashboard() {
             title: "Role",
             dataIndex: "role",
             key: "role",
-            render: (role: string) => (
-                <Tag color={ROLE_COLOR[role]} className="capitalize text-xs">{role}</Tag>
-            ),
+            render: (role: string) => {
+                const color = ROLE_COLOR[role?.toLowerCase()];
+                return (
+                    <Tag color={color} className="capitalize text-xs">{role}</Tag>
+                )
+            },
         },
         {
             title: "Joined",
@@ -190,22 +176,22 @@ export default function AdminDashboard() {
             {/* Main stats */}
             <Row gutter={[16, 16]}>
                 <Col xs={24} sm={12} lg={8}>
-                    <StatCard title="Total Users" value={dashBoard?.totalUsers ?? 0} icon={<UserOutlined />} color="#2563eb" loading={loading} />
+                    <StatCard title="Total Users" value={stats?.totalUsers ?? 0} icon={<UserOutlined />} color="#2563eb" loading={loading} />
                 </Col>
                 <Col xs={24} sm={12} lg={8}>
-                    <StatCard title="Total Videos" value={dashBoard?.totalVideos ?? 0} icon={<VideoCameraOutlined />} color="#7c3aed" loading={loading} />
+                    <StatCard title="Total Videos" value={stats?.totalVideos ?? 0} icon={<VideoCameraOutlined />} color="#7c3aed" loading={loading} />
                 </Col>
                 <Col xs={24} sm={12} lg={8}>
-                    <StatCard title="Total Views" value={dashBoard?.totalVideos ?? 0} icon={<RiseOutlined />} color="#0891b2" loading={loading} />
+                    <StatCard title="Total Views" value={stats?.totalViews ?? 0} icon={<RiseOutlined />} color="#0891b2" loading={loading} />
                 </Col>
                 <Col xs={24} sm={12} lg={8}>
-                    <StatCard title="Community Posts" value={dashBoard?.totalCommunityPosts ?? 0} icon={<TeamOutlined />} color="#059669" loading={loading} />
+                    <StatCard title="Community Posts" value={stats?.totalCommunityPosts ?? 0} icon={<TeamOutlined />} color="#059669" loading={loading} />
                 </Col>
                 <Col xs={24} sm={12} lg={8}>
-                    <StatCard title="Total Contests" value={dashBoard?.totalContests ?? 0} icon={<TrophyOutlined />} color="#d97706" loading={loading} />
+                    <StatCard title="Total Contests" value={stats?.totalContests ?? 0} icon={<TrophyOutlined />} color="#d97706" loading={loading} />
                 </Col>
                 <Col xs={24} sm={12} lg={8}>
-                    <StatCard title="Opportunities" value={dashBoard?.totalOpportunities ?? 0} icon={<BulbOutlined />} color="#db2777" loading={loading} />
+                    <StatCard title="Opportunities" value={stats?.totalOpportunities ?? 0} icon={<BulbOutlined />} color="#db2777" loading={loading} />
                 </Col>
             </Row>
 
@@ -222,23 +208,23 @@ export default function AdminDashboard() {
                                 <div className="flex gap-4">
                                     <div className="flex-1 bg-green-50 rounded-lg p-3 text-center">
                                         <p className="text-xs text-gray-400">Active</p>
-                                        <p className="text-xl font-bold text-green-600">{stats?.users.active.toLocaleString()}</p>
+                                        <p className="text-xl font-bold text-green-600">{(stats?.activeUsers ?? 0).toLocaleString()}</p>
                                     </div>
                                     <div className="flex-1 bg-red-50 rounded-lg p-3 text-center">
                                         <p className="text-xs text-gray-400">Banned</p>
-                                        <p className="text-xl font-bold text-red-500">{stats?.users.banned.toLocaleString()}</p>
+                                        <p className="text-xl font-bold text-red-500">{(stats?.bannedUsers ?? 0).toLocaleString()}</p>
                                     </div>
                                     <div className="flex-1 bg-blue-50 rounded-lg p-3 text-center">
                                         <p className="text-xs text-gray-400">New this month</p>
-                                        <p className="text-xl font-bold text-blue-600">+{stats?.users.newThisMonth}</p>
+                                        <p className="text-xl font-bold text-blue-600">+{stats?.newUsersThisMonth ?? 0}</p>
                                     </div>
                                 </div>
 
                                 <div className="space-y-3 pt-2">
-                                    <RoleBar label="member" count={dashBoard?.memberCount ?? 0} total={dashBoard?.totalUsers ?? 1} color="#2563eb" />
-                                    <RoleBar label="mentor" count={dashBoard?.mentorCount ?? 0} total={dashBoard?.totalUsers ?? 1} color="#7c3aed" />
-                                    <RoleBar label="recruiter" count={dashBoard?.recruiterCount ?? 0} total={dashBoard?.totalUsers ?? 1} color="#d97706" />
-                                    <RoleBar label="admin" count={dashBoard?.adminCount ?? 0} total={dashBoard?.totalUsers ?? 1} color="#dc2626" />
+                                    <RoleBar label="member" count={stats?.memberCount ?? 0} total={stats?.totalUsers ?? 1} color="#2563eb" />
+                                    <RoleBar label="mentor" count={stats?.mentorCount ?? 0} total={stats?.totalUsers ?? 1} color="#7c3aed" />
+                                    <RoleBar label="recruiter" count={stats?.recruiterCount ?? 0} total={stats?.totalUsers ?? 1} color="#d97706" />
+                                    <RoleBar label="admin" count={stats?.adminCount ?? 0} total={stats?.totalUsers ?? 1} color="#dc2626" />
                                 </div>
                             </div>
                         )}
@@ -256,12 +242,12 @@ export default function AdminDashboard() {
                         ) : (
                             <div className="grid grid-cols-2 gap-4">
                                 {[
-                                    { label: "Total Likes", value: stats?.videos.totalLikes ?? 0, color: "text-pink-500" },
-                                    { label: "Community Members", value: stats?.communities.totalMembers ?? 0, color: "text-green-600" },
-                                    { label: "Total Contests", value: stats?.contests.total ?? 0, color: "text-amber-600" },
-                                    { label: "Ended Contests", value: stats?.contests.ended ?? 0, color: "text-gray-500" },
-                                    { label: "Total Messages", value: stats?.messages.total ?? 0, color: "text-blue-500" },
-                                    { label: "Total Opportunities", value: stats?.opportunities.total ?? 0, color: "text-purple-500" },
+                                    { label: "Total Likes", value: stats?.totalLikes ?? 0, color: "text-pink-500" },
+                                    { label: "New Users (7 days)", value: stats?.newUsersLast7Days ?? 0, color: "text-green-600" },
+                                    { label: "Total Contests", value: stats?.totalContests ?? 0, color: "text-amber-600" },
+                                    { label: "Ended Contests", value: stats?.endedContests ?? 0, color: "text-gray-500" },
+                                    { label: "Total Messages", value: stats?.totalMessages ?? 0, color: "text-blue-500" },
+                                    { label: "Total Opportunities", value: stats?.totalOpportunities ?? 0, color: "text-purple-500" },
                                 ].map((item) => (
                                     <div key={item.label} className="bg-gray-50 rounded-lg p-3">
                                         <p className="text-xs text-gray-400 mb-1">{item.label}</p>
@@ -282,7 +268,7 @@ export default function AdminDashboard() {
             >
                 <Table
                     columns={recentUsersColumns}
-                    dataSource={MOCK_RECENT_USERS}
+                    dataSource={stats?.recentUsers}
                     rowKey="id"
                     pagination={false}
                     size="small"

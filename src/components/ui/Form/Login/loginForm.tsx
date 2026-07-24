@@ -48,18 +48,23 @@ export default function LoginForm(){
             } catch (error: unknown) {
                 if (axios.isAxiosError(error) && error.response) {
                     const statusCode = error.response?.status;
-                    if(statusCode == 403){
-                        navigate({ 
+                    const message: string = error.response?.data?.message || 'Something went wrong, please try again.';
+                    if(statusCode == 403 && message.toLowerCase().includes('deactivate')){
+                        navigate({
+                            to: '/account-banned',
+                            search: { email: values.email }
+                        });
+                    }else if(statusCode == 403 && message.toLowerCase().includes('verify')){
+                        navigate({
                             to: '/resend-verification',
-                            search: { email: values.email } 
+                            search: { email: values.email }
                         });
                     }else{
-                        const message = error.response?.data?.message || 'Something went wrong, please try again.';
                         toast.error(message);
                     }
                 } else {
                     console.log("Error with no response:", error);
-                }                       
+                }
             } finally {
                 setSubmitting(false);
             }

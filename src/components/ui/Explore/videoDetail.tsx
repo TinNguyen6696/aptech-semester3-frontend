@@ -9,8 +9,10 @@ import CommentItem from "@/components/Comment/comment";
 import axiosClient from "@/services/axiosClient";
 import { API } from "@/lib/apiendpoint";
 import { toast } from "react-toastify";
+import { StringValue } from "@/lib/stringValue";
 import VideoScrollTrigger from "@/components/Trigger/videoScrollTrigger";
 import DateUtil from "@/lib/dateUtil";
+import UserAvatar from "@/components/ui/UserAvatar/userAvatar";
 
 export default function VideoDetail({ id }) {
     const navigate = useNavigate();
@@ -27,12 +29,19 @@ export default function VideoDetail({ id }) {
     const [isReportOpen, setIsReportOpen] = useState(false);
     const [reportText, setReportText] = useState("");
     const [isReporting, setIsReporting] = useState(false);
+    const [isFollowing, setIsFollowing] = useState(false);
+    const [isLoadingFollow, setIsLoadingFollow] = useState(false);
+    const [isReported, setIsReported] = useState(false);
+    const [followerCount, setFollowerCount] = useState(0);
 
     useEffect(() => {
         if (video) {
             setIsLiked(video.isLiked ?? false);
             setLikeCount(video.likeCount ?? 0);
             setViewCount(video.viewCount ?? 0);
+            setIsFollowing(video.owner?.isFollowing ?? false);
+            setIsReported(video.isReported ?? false);
+            setFollowerCount(video.owner?.followerCount ?? 0);
         }
     }, [video]);
     const category = useMemo(() => video?.category ?? "All", [video?.category]);
@@ -72,12 +81,16 @@ export default function VideoDetail({ id }) {
             setHasCountedView(true);
         }
     };
-    console.log("check video: ", video)
+
     //Like
     const handleToggleLike = async () => {
         if (!userInfo) {
             toast.info("Log in to like");
             navigate({ to: "/login", search: { redirect: location.href } });
+            return;
+        }
+        if (userInfo.role === StringValue.RECRUITER) {
+            toast.info("Recruiters can't like videos");
             return;
         }
         if (isLiking) return;
@@ -153,6 +166,37 @@ export default function VideoDetail({ id }) {
         }
     };
 
+    //Follow
+    const toggleFollow = async () => {
+        if (!userInfo) {
+            toast.info("Log in to follow");
+            navigate({ to: "/login", search: { redirect: location.href } });
+            return;
+        }
+        const prevFollowing = isFollowing;
+        const prevCount = followerCount;
+
+        setIsFollowing(!prevFollowing);
+        setFollowerCount((prev) => prev + (!prevFollowing ? 1 : -1));
+        setIsLoadingFollow(true);
+
+        try {
+            const res = await axiosClient.post(API.AXIOS_USER_FOLLOW.replace("{id}", video.owner?.id));
+            if (!res.data.isSuccess) {
+                setIsFollowing(prevFollowing);
+                setFollowerCount(prevCount);
+                toast.error(res.data.message);
+            }
+        } catch {
+            setIsFollowing(prevFollowing);
+            setFollowerCount(prevCount);
+            toast.error("Failed to update follow status");
+        } finally {
+            setIsLoadingFollow(false);
+        }
+    };
+
+    console.log("check video : ", video)
     //Report 
     const handleSubmitReport = async () => {
         if (!reportText.trim()) return;
@@ -166,6 +210,7 @@ export default function VideoDetail({ id }) {
                 toast.success("Report submitted");
                 setIsReportOpen(false);
                 setReportText("");
+                setIsReported(true);
             } else {
                 toast.error(res.data.message);
             }
@@ -192,9 +237,6 @@ export default function VideoDetail({ id }) {
             </div>
         );
     }
-
-    const ownerInitials =
-        video.owner?.username?.slice(0, 2).toUpperCase() ?? "??";
 
     return (
         <div className="max-w-7xl mx-auto py-8">
@@ -252,23 +294,19 @@ export default function VideoDetail({ id }) {
 
                             <button
                                 onClick={() => setIsReportOpen(true)}
-                                className="flex items-center gap-1.5 px-3.5 py-2 rounded-full text-sm font-semibold bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-700 transition-colors cursor-pointer"
-                                title="Report video"
+                                disabled={isReported}
+                                className={`flex items-center gap-1.5 px-3.5 py-2 rounded-full text-sm font-semibold transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
+                                    isReported
+                                        ? "bg-red-50 text-red-400"
+                                        : "bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-700"
+                                }`}
+                                title={isReported ? "Already reported" : "Report video"}
                             >
-                                <svg
-                                    width="16"
-                                    height="16"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                >
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                     <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
                                     <line x1="4" y1="22" x2="4" y2="15" />
                                 </svg>
-                                Report
+                                {isReported ? "Reported" : "Report"}
                             </button>
 
                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">
@@ -279,33 +317,39 @@ export default function VideoDetail({ id }) {
 
                     {/* Owner info */}
                     <div className="mt-4 flex items-center justify-between border-t border-b border-gray-100 py-4">
-                        <div className="flex items-center gap-3">
-                            {video.owner?.avatarUrl ? (
-                                <img
-                                    src={video.owner.avatarUrl}
-                                    alt={video.owner.username}
-                                    className="w-11 h-11 rounded-full object-cover"
-                                />
-                            ) : (
-                                <span className="w-11 h-11 rounded-full bg-blue-500 flex items-center justify-center text-sm font-bold text-white">
-                                    {ownerInitials}
-                                </span>
-                            )}
+                        <div
+                            className="flex items-center gap-3 cursor-pointer group"
+                            onClick={() => {
+                                if (video.owner?.id) navigate({ to: "/mentorProfile", search: { id: video.owner.id } });
+                            }}
+                        >
+                            <UserAvatar
+                                profileImageUrl={video.owner?.profileImageUrl}
+                                username={video.owner?.username}
+                                size={44}
+                            />
                             <div>
-                                <p className="text-sm font-semibold text-gray-900">
+                                <p className="text-sm font-semibold text-gray-900 group-hover:text-blue-600 group-hover:underline">
                                     {video.owner?.username}
                                 </p>
                                 <p className="text-xs text-gray-400">
-                                    {video.owner?.followerCount ?? 0} followers
+                                    {followerCount} followers
                                 </p>
                             </div>
                         </div>
-                        <button className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-5 py-2.5 rounded-lg transition-colors">
-                            Follow
+                        <button
+                            onClick={toggleFollow}
+                            disabled={isLoadingFollow}
+                            className={`text-sm font-semibold px-5 py-2.5 rounded-lg transition-colors disabled:opacity-60 disabled:cursor-not-allowed ${
+                                isFollowing
+                                    ? "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                                    : "bg-blue-600 text-white hover:bg-blue-700"
+                            }`}
+                        >
+                            {isLoadingFollow ? "..." : isFollowing ? "Following" : "Follow"}
                         </button>
                     </div>
 
-                    {/* Description */}
                     {video.description && (
                         <div className="mt-4 bg-gray-50 rounded-xl p-4">
                             <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">
@@ -314,13 +358,11 @@ export default function VideoDetail({ id }) {
                         </div>
                     )}
 
-                    {/* ── Comments ── */}
                     <div className="mt-8">
                         <h3 className="text-base font-bold text-gray-900 mb-4">
                             {comments.length} comments
                         </h3>
 
-                        {/* Input */}
                         <div className="flex gap-3 mb-6">
                             <input
                                 type="text"
@@ -339,7 +381,6 @@ export default function VideoDetail({ id }) {
                             </button>
                         </div>
 
-                        {/* List */}
                         <div className="divide-y divide-gray-100 max-h-[600px] overflow-y-auto pr-1 comment-scroll">
                             {comments?.length > 0 ? (
                                 comments?.map((comment) => (
@@ -358,7 +399,6 @@ export default function VideoDetail({ id }) {
                     </div>
                 </div>
 
-                {/* ── Sidebar ── */}
                 <div>
                     <h3 className="text-base font-bold text-gray-900 mb-4">
                         Related videos

@@ -9,6 +9,7 @@ import { getSingleCategoryConfig } from "./categoryConfig";
 import { useNavigate } from "@tanstack/react-router";
 import { useUserStore } from "@/Store/userStore";
 import axiosClient from "@/services/axiosClient";
+import UserAvatar from "@/components/ui/UserAvatar/userAvatar";
 
 const PAGE_SIZE = 5;
 
@@ -38,13 +39,11 @@ function PostCard({ post, communityId, canInteract }) {
             className="bg-white border border-gray-200 rounded-xl px-5 py-4 cursor-pointer"
             >
             <div className="flex items-center gap-3 mb-3">
-                <img 
-                    src={`${API.URL}${author.profileImageUrl}`} 
-                    className={`w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-medium`} 
-                    onError={(e) => {
-                        (e.target as HTMLImageElement).src = StringValue.USER_AVATAR_DEFAULT;
-                    }}
-                    />                         
+                <UserAvatar
+                    profileImageUrl={author.profileImageUrl}
+                    username={author.username}
+                    size={36}
+                    />
                 <div>
                     <div className="flex items-center gap-2">
                         <span className="text-sm font-medium text-gray-900">{author.username}</span>

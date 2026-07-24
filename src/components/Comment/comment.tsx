@@ -5,7 +5,9 @@ import { useUserStore } from "@/Store/userStore";
 import { API } from "@/lib/apiendpoint";
 import axiosClient from "@/services/axiosClient";
 import { toast } from "react-toastify";
+import { StringValue } from "@/lib/stringValue";
 import DateUtil from "@/lib/dateUtil";
+import UserAvatar from "@/components/ui/UserAvatar/userAvatar";
 
 export default function CommentItem({ comment, onDelete }) {
     const navigate = useNavigate();
@@ -21,12 +23,19 @@ export default function CommentItem({ comment, onDelete }) {
     const [content, setContent] = useState(comment.content);
 
     const isOwner = userInfo?.id === comment.author?.id;
-    const initials = comment.author?.username?.slice(0, 2).toUpperCase() ?? "??";
+
+    const goToAuthorProfile = () => {
+        if (comment.author?.id) navigate({ to: "/mentorProfile", search: { id: comment.author.id } });
+    };
 
     const handleToggleLike = async () => {
         if (!userInfo) {
             toast.info("Log in to like");
             navigate({ to: "/login", search: { redirect: location.href } });
+            return;
+        }
+        if (userInfo.role === StringValue.RECRUITER) {
+            toast.info("Recruiters can't like comments");
             return;
         }
         if (isLiking) return;
@@ -162,22 +171,21 @@ export default function CommentItem({ comment, onDelete }) {
 
             <div className="flex gap-3 group py-4">
                 {/* Avatar */}
-                {comment.author?.profileImageUrl ? (
-                    <img
-                        src={`${API.URL}${comment.author.profileImageUrl}`}
-                        alt={comment.author.username}
-                        className="w-9 h-9 rounded-full object-cover flex-shrink-0 mt-0.5"
-                    />
-                ) : (
-                    <span className="w-9 h-9 rounded-full bg-blue-500 flex items-center justify-center text-xs font-bold text-white flex-shrink-0 mt-0.5">
-                        {initials}
-                    </span>
-                )}
+                <UserAvatar
+                    profileImageUrl={comment.author?.profileImageUrl}
+                    username={comment.author?.username}
+                    size={36}
+                    className="mt-0.5"
+                    onClick={comment.author?.id ? goToAuthorProfile : undefined}
+                />
 
                 {/* Nội dung */}
                 <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-sm font-semibold text-gray-900">
+                        <span
+                            onClick={goToAuthorProfile}
+                            className={`text-sm font-semibold text-gray-900 ${comment.author?.id ? "cursor-pointer hover:text-blue-600 hover:underline" : ""}`}
+                        >
                             {comment.author?.username ?? "Anonymous"}
                         </span>
                         <span className="text-xs text-gray-400">

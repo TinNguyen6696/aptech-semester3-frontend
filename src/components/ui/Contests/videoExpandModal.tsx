@@ -17,6 +17,7 @@ export default function VideoExpandModal({ video, onClose }) {
     const [showSpeedMenu, setShowSpeedMenu] = useState(false);
     const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+    console.log("check video: ", video)
     if (!video) return null;
 
     const fmt = (s: number) => {
@@ -109,7 +110,7 @@ export default function VideoExpandModal({ video, onClose }) {
                 >
                     <video
                         ref={videoRef}
-                        src={`${API.URL}${video.videoUrl}`}
+                        src={video.videoUrl}
                         poster={video.thumbnail ?? undefined}
                         className="w-full h-full object-contain"
                         playsInline

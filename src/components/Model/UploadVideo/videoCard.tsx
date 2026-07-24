@@ -22,10 +22,17 @@ export default function VideoRowCard({ video, openMenuId, setOpenMenuId, onDelet
         )}
 
 
-        <span className="absolute top-3 left-3 bg-black/30 text-white text-[10px] font-bold tracking-wide px-2.5 py-1 rounded-full backdrop-blur-sm">
-          {video.category}
-        </span>
-     
+        <div className="absolute top-3 left-3 flex items-center gap-1.5">
+          <span className="bg-black/30 text-white text-[10px] font-bold tracking-wide px-2.5 py-1 rounded-full backdrop-blur-sm">
+            {video.category}
+          </span>
+          {video.isRemovedByAdmin && (
+            <span className="bg-red-600 text-white text-[10px] font-bold tracking-wide px-2.5 py-1 rounded-full">
+              Banned
+            </span>
+          )}
+        </div>
+
         <div className="absolute top-2.5 right-2.5">
           <button
             onClick={(e) => {
@@ -71,6 +78,9 @@ export default function VideoRowCard({ video, openMenuId, setOpenMenuId, onDelet
       <div className="mt-3 flex items-start justify-between gap-2">
         <h3 className="text-[15px] font-semibold text-gray-900 line-clamp-1">{video.title}</h3>
       </div>
+      {video.isRemovedByAdmin && (
+        <p className="text-xs text-red-500 mt-1">This video violated our guidelines and was banned. You can delete it via the menu above.</p>
+      )}
 
       <div className="mt-2 flex items-center justify-between">
         <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-500 bg-gray-100 px-2.5 py-1 rounded-full">

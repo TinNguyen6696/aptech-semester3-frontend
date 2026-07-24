@@ -16,10 +16,13 @@ export default function MyVideosPage() {
   const [videoToDelete, setVideoToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [videoToEdit, setVideoToEdit] = useState(null);
+  const [activeTab, setActiveTab] = useState('all');
 
-  const totalViews = '304K';
-  const totalLikes = '27.1K';
+  const totalViews = videos.reduce((sum, v) => sum + (v.viewCount ?? 0), 0);
+  const totalLikes = videos.reduce((sum, v) => sum + (v.likeCount ?? 0), 0);
   const isLimitReached = videos.length >= MAX_VIDEOS;
+  const bannedCount = videos.filter((v) => v.isRemovedByAdmin).length;
+  const visibleVideos = activeTab === 'banned' ? videos.filter((v) => v.isRemovedByAdmin) : videos;
   const fetchVideos = useCallback(async () => {
     try {
       const res = await axiosClient.get(API.AXIOS_VIDEO_GET_ALL);
@@ -108,18 +111,46 @@ export default function MyVideosPage() {
               <p className="text-xs text-gray-400 mt-0.5">Videos</p>
             </div>
             <div className="border border-gray-100 rounded-xl p-4">
-              <p className="text-xl font-extrabold text-gray-900">{totalViews}</p>
+              <p className="text-xl font-extrabold text-gray-900">{totalViews.toLocaleString()}</p>
               <p className="text-xs text-gray-400 mt-0.5">Total views</p>
             </div>
             <div className="border border-gray-100 rounded-xl p-4">
-              <p className="text-xl font-extrabold text-gray-900">{totalLikes}</p>
+              <p className="text-xl font-extrabold text-gray-900">{totalLikes.toLocaleString()}</p>
               <p className="text-xs text-gray-400 mt-0.5">Total likes</p>
             </div>
           </div>
 
-          {videos.length > 0 ? (
+          <div className="flex items-center gap-1 border-b border-gray-100 mb-6">
+            <button
+              onClick={() => setActiveTab('all')}
+              className={`px-4 py-2.5 text-sm font-semibold border-b-2 transition-colors ${
+                activeTab === 'all'
+                  ? 'border-blue-600 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-800'
+              }`}
+            >
+              All videos
+            </button>
+            <button
+              onClick={() => setActiveTab('banned')}
+              className={`px-4 py-2.5 text-sm font-semibold border-b-2 transition-colors flex items-center gap-1.5 ${
+                activeTab === 'banned'
+                  ? 'border-red-600 text-red-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-800'
+              }`}
+            >
+              Banned
+              {bannedCount > 0 && (
+                <span className="text-[10px] font-bold bg-red-100 text-red-600 px-1.5 py-0.5 rounded-full">
+                  {bannedCount}
+                </span>
+              )}
+            </button>
+          </div>
+
+          {visibleVideos.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {videos.map((video) => (
+              {visibleVideos.map((video) => (
                 <VideoCard
                   key={video.id}
                   video={video}
@@ -129,6 +160,11 @@ export default function MyVideosPage() {
                   onEditClick={handleEditClick}
                 />
               ))}
+            </div>
+          ) : activeTab === 'banned' ? (
+            <div className="border border-dashed border-gray-200 rounded-2xl py-16 text-center">
+              <p className="text-sm font-semibold text-gray-700">No banned videos</p>
+              <p className="text-xs text-gray-400 mt-1">Videos removed for violating guidelines will show up here.</p>
             </div>
           ) : (
             <div className="border border-dashed border-gray-200 rounded-2xl py-16 text-center">

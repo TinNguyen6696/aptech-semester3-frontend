@@ -8,7 +8,8 @@ import { StringValue } from "@/lib/stringValue";
 
 function formatTime(iso) {
     if (!iso) return "";
-    const d = new Date(iso);
+    const str = iso.endsWith("Z") ? iso : iso + "Z";
+    const d = new Date(str);
     const now = new Date();
     const isToday =
         d.getDate() === now.getDate() &&
@@ -18,7 +19,6 @@ function formatTime(iso) {
         ? d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
         : d.toLocaleDateString([], { month: "short", day: "numeric" });
 }
-
 function Avatar({ src, name, size = "md" }) {
     const [errored, setErrored] = useState(false);
     const sizeClass = size === "sm" ? "w-8 h-8 text-xs" : "w-10 h-10 text-sm";
@@ -130,7 +130,6 @@ export default function Messages() {
         bottomRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [messages]);
 
-    // ── send message ──────────────────────────────────────────────────────────
     const sendMessage = async () => {
         if (!draft.trim() || sending || !activeId) return;
         const text = draft.trim();
@@ -142,7 +141,7 @@ export default function Messages() {
             id: `temp-${Date.now()}`,
             content: text,
             senderId: userInfo.id,
-            createdAt: new Date().toISOString(),
+            createdAt: new Date().toISOString().replace("Z", ""),
             isPending: true,
         };
         setMessages((prev) => [...prev, tempMsg]);
@@ -153,12 +152,10 @@ export default function Messages() {
                 content: text,
             });
             if (res.data.isSuccess) {
-                // replace optimistic với real message
-                setMessages((prev) =>
+                setMessages((prev : any) =>
                     prev.map((m) => (m.id === tempMsg.id ? res.data.data : m))
                 );
-                // cập nhật preview trong conv list
-                setConversations((prev) =>
+                setConversations((prev : any) =>
                     prev.map((c) =>
                         c.id === activeId
                             ? { ...c, lastMessage: text, lastMessageAt: new Date().toISOString() }
@@ -268,7 +265,7 @@ export default function Messages() {
                                                             {name || "Unknown"}
                                                         </p>
                                                         <span className="text-[10px] text-gray-400 flex-shrink-0 ml-1">
-                                                            {formatTime(conv.lastMessageAt+'Z')}
+                                                            {formatTime(conv.lastMessageAt)}
                                                         </span>
                                                     </div>
                                                     <p className={`text-xs truncate mt-0.5 ${conv.unreadCount > 0 ? "text-gray-700 font-medium" : "text-gray-400"}`}>
@@ -357,7 +354,7 @@ export default function Messages() {
                                                         {msg.content}
                                                     </div>
                                                     <span className="text-[10px] text-gray-400 px-1">
-                                                        {msg.isPending ? "Sending..." : formatTime(msg.createdAt+'Z')}
+                                                        {msg.isPending ? "Sending..." : formatTime(msg.createdAt)}
                                                     </span>
                                                 </div>
                                             </div>

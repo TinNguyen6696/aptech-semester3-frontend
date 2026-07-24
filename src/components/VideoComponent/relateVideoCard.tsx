@@ -27,7 +27,15 @@ export default function RelatedVideoCard({ video }) {
                 <h4 className="text-sm font-semibold text-gray-900 leading-snug line-clamp-2 group-hover:text-blue-600 transition-colors">
                     {video.title}
                 </h4>
-                <p className="text-xs text-gray-500 mt-1">{video.owner?.username}</p>
+                <p
+                    className="text-xs text-gray-500 mt-1 hover:text-blue-600 hover:underline cursor-pointer w-fit"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        if (video.owner?.id) navigate({ to: "/mentorProfile", search: { id: video.owner.id } });
+                    }}
+                >
+                    {video.owner?.username}
+                </p>
                 <p className="text-xs text-gray-400">{video.viewCount ?? 0} views</p>
             </div>
         </div>

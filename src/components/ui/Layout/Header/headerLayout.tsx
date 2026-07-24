@@ -5,7 +5,10 @@ import { StringValue } from '@/lib/stringValue';
 import { API } from '@/lib/apiendpoint';
 import { useUserStore } from '@/Store/userStore';
 import axiosClient from '@/services/axiosClient';
- 
+import type { Notification } from '@/types/notification.types';
+import DateUtil from '@/lib/dateUtil';
+import UserAvatar from '@/components/ui/UserAvatar/userAvatar';
+
 const ALL_ROLES = ['guest', StringValue.MEMBER, StringValue.MENTOR, StringValue.RECRUITER, StringValue.ADMIN];
 
 const NAV_ITEMS = [
@@ -22,6 +25,10 @@ export default function HeaderLayout(){
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [unreadCount, setUnreadCount] = useState(0);
+    const [notiOpen, setNotiOpen] = useState(false);
+    const [notifications, setNotifications] = useState<Notification[]>([]);
+    const [notiLoading, setNotiLoading] = useState(false);
+    const notiRef = useRef<HTMLDivElement>(null);
     const isBadgeDismissed = () => {
         const until = localStorage.getItem(DISMISS_KEY);
         if (!until) return false;
@@ -38,14 +45,14 @@ export default function HeaderLayout(){
     const { userInfo, updateUserInfo, clearUserInfo } = useUserStore();
     const currentRole = userInfo?.role ?? 'guest';
     const visibleNavItems = NAV_ITEMS.filter((item) => item.roles.includes(currentRole));
-    const previewUrl = userInfo?.profileImageUrl
-        ? `${API.URL}/${userInfo.profileImageUrl}`
-        : StringValue.USER_AVATAR_DEFAULT;
-     
+
     useEffect(() => {
         function handleClickOutside(event) {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
                 setIsDropdownOpen(false);
+            }
+            if (notiRef.current && !notiRef.current.contains(event.target)) {
+                setNotiOpen(false);
             }
         }
         document.addEventListener('mousedown', handleClickOutside);
@@ -92,10 +99,56 @@ export default function HeaderLayout(){
         window.location.href = '/login';
     };
 
-    const getInitial = () => {
-        const name = userInfo?.fullName || userInfo?.name || userInfo?.email || '';
-        return name.charAt(0).toUpperCase();
+    const fetchNotifications = async () => {
+        setNotiLoading(true);
+        try {
+            const res = await axiosClient.get(API.AXIOS_NOTIFICATIONS_GET_ALL);
+            if (res.data.isSuccess) {
+                const data = res.data.data.notifications;
+                const list = Array.isArray(data) ? data
+                           : Array.isArray(data?.notifications) ? data.notifications
+                           : Array.isArray(data?.items) ? data.items
+                           : [];
+                setNotifications(list);
+            }
+        } catch (e) {
+            console.error("noti error:", e);
+        } finally {
+            setNotiLoading(false);
+        }
     };
+
+    useEffect(() => {
+        fetchNotifications();
+    }, []);
+
+    const handleToggleNoti = () => {
+        if (!notiOpen) fetchNotifications();
+        setNotiOpen((v) => !v);
+        setIsDropdownOpen(false);
+    };
+
+    const handleMarkRead = async (id: number) => {
+        try {
+            await axiosClient.put(API.AXIOS_NOTIFICATIONS_READ.replace('{id}', String(id)));
+            setNotifications((prev) =>
+                prev.map((n) => n.id === id ? { ...n, isRead: true } : n)
+            );
+        } catch {
+            // silent
+        }
+    };
+
+    const handleMarkAllRead = async () => {
+        try {
+            await axiosClient.put(API.AXIOS_NOTIFICATIONS_READ_ALL);
+            setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+        } catch {
+            // silent
+        }
+    };
+
+    const unreadNotiCount = notifications?.filter((n) => !n.isRead).length;
 
     return (
         <>
@@ -129,6 +182,65 @@ export default function HeaderLayout(){
 
                 <div className="hidden md:flex items-center gap-5">
                     {userInfo && (
+                        <div ref={notiRef} className="relative">
+                            <button
+                                onClick={handleToggleNoti}
+                                className="relative p-1.5 text-gray-500 hover:text-gray-900 transition-colors"
+                            >
+                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                                </svg>
+                                {unreadNotiCount > 0 && (
+                                    <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                                        {unreadNotiCount > 9 ? "9+" : unreadNotiCount}
+                                    </span>
+                                )}
+                            </button>
+
+                            {notiOpen && (
+                                <div className="absolute right-0 top-11 w-96 bg-white rounded-xl shadow-lg border border-gray-100 z-50 overflow-hidden">
+                                    <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+                                        <span className="text-sm font-semibold text-gray-800">Notifications</span>
+                                        {unreadNotiCount > 0 && (
+                                            <button
+                                                onClick={handleMarkAllRead}
+                                                className="text-xs text-blue-600 font-medium hover:text-blue-800 cursor-pointer transition-colors"
+                                            >
+                                                Mark all as read
+                                            </button>
+                                        )}
+                                    </div>
+                                    <div className="max-h-72 overflow-y-auto divide-y divide-gray-50">
+                                        {notiLoading ? (
+                                            <div className="flex justify-center py-8">
+                                                <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                                            </div>
+                                        ) : notifications?.length === 0 ? (
+                                            <p className="text-sm text-gray-400 text-center py-8">No notifications</p>
+                                        ) : (
+                                            notifications?.map((n) => (
+                                                <div
+                                                    key={n.id}
+                                                    onClick={() => !n.isRead && handleMarkRead(n.id)}
+                                                    className={`px-4 py-3 flex items-start justify-between gap-3 hover:bg-gray-50 transition-colors ${!n.isRead ? "bg-blue-50/50 cursor-pointer" : ""}`}
+                                                >
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className="text-sm text-gray-800">{n.content}</p>
+                                                        <p className="text-xs text-gray-400 mt-1">{DateUtil.timeAgo(n.createdAt+'Z')}</p>
+                                                    </div>
+                                                    {!n.isRead && (
+                                                        <span className="flex-shrink-0 w-2 h-2 mt-1.5 rounded-full bg-blue-500" title="Unread" />
+                                                    )}
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {userInfo && (
                         <a href="/messages"
                             className="relative p-1.5 text-gray-500 hover:text-gray-900 transition-colors"
                             onClick={() => {
@@ -153,21 +265,14 @@ export default function HeaderLayout(){
                                     onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                                     className="flex items-center gap-2 focus:outline-none cursor-pointer"
                                 >
-                                    {previewUrl ? (
-                                        <img
-                                            src={previewUrl}
-                                            alt="avatar"
-                                            className="w-8 h-8 rounded-full object-cover border border-gray-200"
-                                            onError={(e) => {
-                                                e.currentTarget.src = StringValue.USER_AVATAR_DEFAULT;
-                                                e.currentTarget.onerror = null;
-                                            }}
-                                        />
-                                    ) : (
-                                        <span className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-semibold">
-                                            {getInitial()}
-                                        </span>
-                                    )}
+                                    <UserAvatar
+                                        profileImageUrl={userInfo?.profileImageUrl}
+                                        firstName={userInfo?.firstName}
+                                        lastName={userInfo?.lastName}
+                                        username={userInfo?.username}
+                                        size={32}
+                                        className="border border-gray-200"
+                                    />
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-500">
                                         <polyline points="6 9 12 15 18 9"></polyline>
                                     </svg>
@@ -190,6 +295,9 @@ export default function HeaderLayout(){
                                         )}
                                         <a href="/profile" className="block px-3.5 py-2 text-sm text-gray-600 hover:bg-gray-50">
                                             Profile
+                                        </a>
+                                        <a href="/follow" className="block px-3.5 py-2 text-sm text-gray-600 hover:bg-gray-50">
+                                            Follow
                                         </a>
                                         <a href="/messages" className="block px-3.5 py-2 text-sm text-gray-600 hover:bg-gray-50">
                                             Messages
@@ -233,21 +341,14 @@ export default function HeaderLayout(){
                         <div className="mt-4 pt-4 border-t border-gray-100">
                             {userInfo ? (
                                 <div className="flex items-center gap-3">
-                                    {previewUrl ? (
-                                        <img
-                                            src={previewUrl}
-                                            alt="avatar"
-                                            className="w-9 h-9 rounded-full object-cover border border-gray-200"
-                                            onError={(e) => {
-                                                e.currentTarget.src = StringValue.USER_AVATAR_DEFAULT;
-                                                e.currentTarget.onerror = null;
-                                            }}
-                                        />
-                                    ) : (
-                                        <span className="w-9 h-9 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-semibold">
-                                            {getInitial()}
-                                        </span>
-                                    )}
+                                    <UserAvatar
+                                        profileImageUrl={userInfo?.profileImageUrl}
+                                        firstName={userInfo?.firstName}
+                                        lastName={userInfo?.lastName}
+                                        username={userInfo?.username}
+                                        size={36}
+                                        className="border border-gray-200"
+                                    />
                                     <div className="flex-1 min-w-0">
                                         <p className="text-sm font-semibold text-gray-900 truncate">
                                             {`${userInfo.firstName} ${userInfo.lastName}`}

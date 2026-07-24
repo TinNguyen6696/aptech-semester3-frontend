@@ -3,7 +3,7 @@ import { useRef } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { API } from "@/lib/apiendpoint";
 
-export default function PublicVideoCard({ video }) {
+export default function PublicVideoCard({ video, isFollowing, isLoadingFollow, onFollow }) {
     const videoRef = useRef(null);
     const navigate = useNavigate();
 
@@ -49,7 +49,29 @@ export default function PublicVideoCard({ video }) {
             </div>
             <h3 className="mt-3 text-[15px] font-semibold text-gray-900">{video.title}</h3>
             <div className="mt-2 flex items-center justify-between">
-                <span className="text-sm text-gray-500">{video.owner?.username}</span>
+                <span
+                    className="text-sm text-gray-500 hover:text-blue-600 hover:underline cursor-pointer"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        if (video.owner?.id) navigate({ to: "/mentorProfile", search: { id: video.owner.id } });
+                    }}
+                >
+                    {video.owner?.username}
+                </span>
+                <button
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        onFollow?.();
+                    }}
+                    disabled={isLoadingFollow}
+                    className={`text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors disabled:opacity-60 disabled:cursor-not-allowed ${
+                        isFollowing
+                            ? "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                            : "bg-blue-600 text-white hover:bg-blue-700"
+                    }`}
+                >
+                    {isLoadingFollow ? "..." : isFollowing ? "Following" : "Follow"}
+                </button>
             </div>
         </div>
     );
